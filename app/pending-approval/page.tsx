@@ -12,6 +12,7 @@ export default function PendingApprovalPage() {
 
   useEffect(() => {
     checkApprovalStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkApprovalStatus = async () => {

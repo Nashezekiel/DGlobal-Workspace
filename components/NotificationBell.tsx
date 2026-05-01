@@ -50,6 +50,7 @@ export function NotificationBell() {
         supabase.removeChannel(channel)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchNotifications = async (resolvedUserId?: string) => {

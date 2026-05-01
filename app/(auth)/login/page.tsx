@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import { Eye, EyeOff, Mail, Lock, Clock, X } from 'lucide-react'
@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [fullName, setFullName] = useState('')
-  const router = useRouter()
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -42,6 +42,7 @@ export const LazyImage = memo(function LazyImage({
         <div className={`absolute inset-0 ${placeholder} animate-pulse rounded`} />
       )}
       {isInView && (
+        /* eslint-disable-next-line @next/next/no-img-element */
         <img
           src={src}
           alt={alt}

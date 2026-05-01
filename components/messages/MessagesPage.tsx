@@ -36,6 +36,7 @@ export default function MessagesPage() {
   useEffect(() => {
     fetchRooms()
     checkUserRole()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkUserRole = async () => {
