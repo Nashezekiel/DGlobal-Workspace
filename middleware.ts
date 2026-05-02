@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -19,40 +19,26 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Create a single response object and accumulate cookies on it
   let res = NextResponse.next({
-    request: { headers: req.headers },
+    request,
   })
-
-  // Track all cookies that need to be set so we don't lose them
-  // when creating new response objects
-  const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = []
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
-      get(name: string) {
-        return req.cookies.get(name)?.value
+      getAll() {
+        return request.cookies.getAll()
       },
-      set(name: string, value: string, options: Record<string, unknown>) {
-        const { maxAge: _maxAge, ...rest } = options as Record<string, unknown> & { maxAge?: unknown }
-        req.cookies.set(name, value)
-        cookiesToSet.push({ name, value, options: rest })
-      },
-      remove(name: string, options: Record<string, unknown>) {
-        const { maxAge: _maxAge, ...rest } = options as Record<string, unknown> & { maxAge?: unknown }
-        req.cookies.set(name, '')
-        cookiesToSet.push({ name, value: '', options: { ...rest, maxAge: 0 } })
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        res = NextResponse.next({
+          request,
+        })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          res.cookies.set(name, value, options)
+        )
       },
     },
   })
-
-  // Helper to apply accumulated cookies onto a response
-  function applyCookies(response: NextResponse) {
-    for (const c of cookiesToSet) {
-      response.cookies.set({ name: c.name, value: c.value, ...c.options } as any)
-    }
-    return response
-  }
 
   // Use getUser() for auth verification — this also refreshes the session
   let user = null
@@ -66,7 +52,7 @@ export async function middleware(req: NextRequest) {
     // Network / DNS error — don't log the user out for transient failures
     console.warn('Middleware: Supabase auth request failed (transient):', (err as Error)?.message)
     // Allow the request through — the page-level auth check will handle it
-    return applyCookies(NextResponse.next({ request: { headers: req.headers } }))
+    return res
   }
 
   // If on auth page, allow through (but still apply cookie refreshes)
@@ -82,19 +68,19 @@ export async function middleware(req: NextRequest) {
 
         if (profile?.approval_status === 'approved') {
           const dest = profile.role === 'admin' ? '/admin/dashboard' : '/dashboard'
-          return applyCookies(NextResponse.redirect(new URL(dest, req.url)))
+          return NextResponse.redirect(new URL(dest, request.url))
         }
       } catch {
         // If profile check fails, just let them stay on auth page
       }
     }
-    return applyCookies(res)
+    return res
   }
 
   // For protected routes: if getUser returned an error or null user, redirect to login
   if (authError || !user) {
-    const loginUrl = new URL('/login', req.url)
-    return applyCookies(NextResponse.redirect(loginUrl))
+    const loginUrl = new URL('/login', request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
   // Fetch profile for role-based routing
@@ -107,38 +93,38 @@ export async function middleware(req: NextRequest) {
       .single()
 
     if (profileError || !data) {
-      return applyCookies(NextResponse.redirect(new URL('/login', req.url)))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
     profile = data
   } catch (err) {
     // Transient DB error — allow through rather than logging out
     console.warn('Middleware: Profile fetch failed (transient):', (err as Error)?.message)
-    return applyCookies(NextResponse.next({ request: { headers: req.headers } }))
+    return res
   }
 
   if (profile.approval_status === 'pending' && pathname !== '/pending-approval') {
-    return applyCookies(NextResponse.redirect(new URL('/pending-approval', req.url)))
+    return NextResponse.redirect(new URL('/pending-approval', request.url))
   }
 
   if (profile.approval_status === 'rejected') {
-    return applyCookies(NextResponse.redirect(new URL('/login', req.url)))
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (profile.role === 'admin') {
     if (pathname === '/dashboard') {
-      return applyCookies(NextResponse.redirect(new URL('/admin/dashboard', req.url)))
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
     if (
       !pathname.startsWith('/admin') &&
       pathname !== '/pending-approval'
     ) {
-      return applyCookies(NextResponse.redirect(new URL('/admin/dashboard', req.url)))
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
   } else if (pathname.startsWith('/admin')) {
-    return applyCookies(NextResponse.redirect(new URL('/dashboard', req.url)))
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  return applyCookies(NextResponse.next({ request: { headers: req.headers } }))
+  return res
 }
 
 // Skip middleware for static files and common metadata files.
