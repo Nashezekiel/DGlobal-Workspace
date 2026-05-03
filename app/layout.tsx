@@ -3,7 +3,7 @@ import "./globals.css";
 import dgLogo from "@/app/DGlogo.png";
 
 export const metadata: Metadata = {
-  title: "D-GEW",
+  title: "DGG-Workspace",
   description: "Internship Management Platform",
   icons: {
     icon: dgLogo.src,

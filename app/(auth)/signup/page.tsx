@@ -99,7 +99,7 @@ export default function SignupPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3 overflow-hidden border border-purple-100 bg-white shadow-sm">
             <Image
               src={dgLogo}
-              alt="D-Global logo"
+              alt="DGG-Workspace logo"
               width={56}
               height={56}
               className="h-full w-full object-contain"
@@ -107,7 +107,7 @@ export default function SignupPage() {
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h1>
-          <p className="text-gray-500 text-sm">Request access to the D-Global workspace</p>
+          <p className="text-gray-500 text-sm">Request access to the DGG-Workspace</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">

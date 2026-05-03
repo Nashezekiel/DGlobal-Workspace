@@ -69,14 +69,14 @@ export function AdminShell({
             <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/20 bg-white">
               <Image
                 src={dgLogo}
-                alt="D-Global logo"
+                alt="DGG-Workspace logo"
                 width={40}
                 height={40}
                 className="h-full w-full object-contain"
                 priority
               />
             </div>
-            <h1 className="text-2xl font-bold">D-GEW</h1>
+            <h1 className="text-2xl font-bold">DGG-Workspace</h1>
           </div>
           <button
             className="md:hidden rounded-md p-2 hover:bg-white/10 transition-colors"
