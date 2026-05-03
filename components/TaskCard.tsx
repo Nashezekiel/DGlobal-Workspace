@@ -3,221 +3,194 @@
 import { Task } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Calendar, User, Clock, AlertCircle, Edit2, Trash2 } from 'lucide-react'
-import { memo, lazy, Suspense } from 'react'
-
-const TaskSubmissionDialog = lazy(() => import('@/components/TaskSubmissionDialog').then(m => ({ default: m.TaskSubmissionDialog })))
+import { Calendar, AlertCircle, Lock, GripVertical, PlayCircle, CheckCircle2, RotateCcw } from 'lucide-react'
+import { memo } from 'react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 interface TaskCardProps {
   task: Task
   onUpdateStatus?: (taskId: string, status: Task['status']) => void
-  onEdit?: (task: Task) => void
-  onDelete?: (taskId: string) => void
-  showActions?: boolean
-  compact?: boolean
+  isWorkerView?: boolean
+  isDragging?: boolean
 }
+
+const PRIORITY_STYLES: Record<Task['priority'], string> = {
+  high:   'bg-red-100 text-red-700 border-red-200',
+  medium: 'bg-amber-100 text-amber-700 border-amber-200',
+  low:    'bg-emerald-100 text-emerald-700 border-emerald-200',
+}
+
+const STATUS_STYLES: Record<Task['status'], string> = {
+  pending:      'bg-slate-100 text-slate-600',
+  in_progress:  'bg-blue-100 text-blue-700',
+  under_review: 'bg-yellow-100 text-yellow-700',
+  completed:    'bg-green-100 text-green-700',
+  rejected:     'bg-red-100 text-red-700',
+}
+
+const STATUS_LABELS: Record<Task['status'], string> = {
+  pending:      'To Do',
+  in_progress:  'In Progress',
+  under_review: 'Under Review',
+  completed:    'Done',
+  rejected:     'Rejected',
+}
+
+// Columns workers can DRAG FROM (they cannot drag from review/done/rejected)
+const WORKER_DRAGGABLE_STATUSES: Task['status'][] = ['pending', 'in_progress', 'rejected']
 
 export const TaskCard = memo(function TaskCard({
   task,
   onUpdateStatus,
-  onEdit,
-  onDelete,
-  showActions = true,
-  compact = false,
+  isWorkerView = true,
 }: TaskCardProps) {
-  const getStatusColor = (status: Task['status']) => {
-    switch (status) {
-      case 'rejected':
-        return 'bg-red-100 text-red-700 border-red-200'
-      case 'completed':
-        return 'bg-green-100 text-green-700 border-green-200'
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-700 border-blue-200'
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200'
-    }
+  const isDraggable = !isWorkerView || WORKER_DRAGGABLE_STATUSES.includes(task.status)
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    disabled: !isDraggable,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 'auto',
   }
 
-  const getPriorityColor = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200'
-      case 'medium':
-        return 'bg-orange-100 text-orange-700 border-orange-200'
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200'
-    }
-  }
+  const isOverdue =
+    task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed'
 
-  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed'
+  const isLocked = isWorkerView && (task.status === 'under_review' || task.status === 'completed')
 
   return (
-    <Card className={`w-full hover:shadow-lg transition-all duration-200 ${
-      task.status === 'rejected'
-        ? 'border-l-4 border-l-red-500 bg-red-50/40'
-        : isOverdue
-          ? 'border-red-300 bg-red-50/50'
-          : 'border-gray-200'
-    }`}>
-      <CardHeader className={compact ? 'pb-2' : 'pb-4'}>
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
-              {task.title}
-            </CardTitle>
-            <p className="text-gray-600 text-sm leading-relaxed">{task.description}</p>
-          </div>
-          <div className="flex flex-col gap-2 flex-shrink-0">
-            <Badge className={`text-xs font-medium ${getStatusColor(task.status)}`}>
-              {task.status.replace('_', ' ')}
-            </Badge>
-            <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
-              {task.priority}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className={`flex items-center gap-4 text-sm text-gray-500 ${compact ? 'mb-2' : 'mb-4'}`}>
-          {task.due_date && (
-            <div className={`flex items-center gap-1.5 ${
-              isOverdue ? 'text-red-600 font-medium' : ''
-            }`}>
-              <Calendar className="h-4 w-4" />
-              <span>
-                {new Date(task.due_date).toLocaleDateString()}
-                {isOverdue && (
-                  <span className="ml-1 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Overdue
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
-          {task.assigned_to && (
-            <div className="flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              <span>Assigned</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-4 w-4" />
-            <span>Created {new Date(task.created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        {task.status === 'rejected' && task.admin_feedback && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Admin Feedback</p>
-            <p className="mt-1 text-sm text-red-800">{task.admin_feedback}</p>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group rounded-xl border bg-white shadow-sm transition-all duration-200 hover:shadow-md ${
+        task.status === 'rejected'
+          ? 'border-l-4 border-l-red-500'
+          : task.status === 'completed'
+          ? 'border-l-4 border-l-green-500'
+          : task.status === 'under_review'
+          ? 'border-l-4 border-l-amber-400'
+          : task.status === 'in_progress'
+          ? 'border-l-4 border-l-blue-500'
+          : 'border-l-4 border-l-slate-300'
+      } ${isDragging ? 'rotate-1 scale-105 shadow-xl' : ''}`}
+    >
+      {/* Card Top */}
+      <div className="flex items-start gap-2 p-3 pb-2">
+        {/* Drag Handle */}
+        {isDraggable ? (
+          <button
+            {...attributes}
+            {...listeners}
+            className="mt-0.5 flex-shrink-0 cursor-grab text-gray-300 hover:text-gray-500 active:cursor-grabbing touch-none"
+            title="Drag to move"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        ) : (
+          <div className="mt-0.5 flex-shrink-0 text-gray-300" title="Locked — awaiting admin">
+            <Lock className="h-4 w-4" />
           </div>
         )}
 
-        {showActions && onUpdateStatus && (
-          <div className="flex gap-2 pt-2 border-t border-gray-100">
-            {onEdit && (
-              <Button
-                onClick={() => onEdit(task)}
-                size="sm"
-                variant="ghost"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                onClick={() => onDelete(task.id)}
-                size="sm"
-                variant="ghost"
-                className="text-red-600 hover:text-red-900"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            {task.status === 'pending' && (
-              <>
-                <Button
-                  onClick={() => onUpdateStatus(task.id, 'in_progress')}
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Start
-                </Button>
-                <Button
-                  onClick={() => onUpdateStatus(task.id, 'under_review')}
-                  size="sm"
-                  variant="outline"
-                >
-                  Review
-                </Button>
-              </>
-            )}
-            {task.status === 'in_progress' && (
-              <>
-                <Suspense fallback={<Button size="sm" variant="outline" disabled>Submit</Button>}>
-                  <TaskSubmissionDialog 
-                    task={task}
-                    onSubmitted={() => onUpdateStatus?.(task.id, 'under_review')}
-                    trigger={
-                      <Button size="sm" variant="outline">
-                        Submit
-                      </Button>
-                    }
-                  />
-                </Suspense>
-                <Button
-                  onClick={() => onUpdateStatus(task.id, 'completed')}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  Done
-                </Button>
-              </>
-            )}
-            {task.status === 'under_review' && (
-              <>
-                <Button
-                  onClick={() => onUpdateStatus(task.id, 'in_progress')}
-                  size="sm"
-                  variant="outline"
-                >
-                  Reopen
-                </Button>
-                <Button
-                  onClick={() => onUpdateStatus(task.id, 'completed')}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  Approve
-                </Button>
-              </>
-            )}
-            {task.status === 'completed' && (
-              <Button
-                onClick={() => onUpdateStatus(task.id, 'in_progress')}
-                size="sm"
-                variant="outline"
-              >
-                Reopen
-              </Button>
-            )}
-            {task.status === 'rejected' && (
-              <Button
-                onClick={() => onUpdateStatus(task.id, 'in_progress')}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Revise & Resubmit
-              </Button>
-            )}
-          </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-gray-900 leading-snug truncate">{task.title}</p>
+          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{task.description}</p>
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div className="flex items-center gap-1.5 px-3 pb-2 flex-wrap">
+        <Badge className={`text-[10px] px-1.5 py-0 h-5 font-medium border ${PRIORITY_STYLES[task.priority]}`}>
+          {task.priority}
+        </Badge>
+        <Badge className={`text-[10px] px-1.5 py-0 h-5 font-medium ${STATUS_STYLES[task.status]}`}>
+          {STATUS_LABELS[task.status]}
+        </Badge>
+        {task.due_date && (
+          <span className={`flex items-center gap-1 text-[10px] ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>
+            <Calendar className="h-3 w-3" />
+            {new Date(task.due_date).toLocaleDateString()}
+            {isOverdue && <AlertCircle className="h-3 w-3" />}
+          </span>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Admin Feedback (Rejected) */}
+      {task.status === 'rejected' && task.admin_feedback && (
+        <div className="mx-3 mb-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-red-600">Admin Feedback</p>
+          <p className="mt-0.5 text-xs text-red-800">{task.admin_feedback}</p>
+        </div>
+      )}
+
+      {/* Action Buttons (Worker) */}
+      {isWorkerView && onUpdateStatus && (
+        <div className="px-3 pb-3 pt-1 border-t border-gray-100 flex gap-2">
+          {task.status === 'pending' && (
+            <Button
+              size="sm"
+              className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white flex-1"
+              onClick={() => onUpdateStatus(task.id, 'in_progress')}
+            >
+              <PlayCircle className="h-3.5 w-3.5 mr-1" />
+              Start
+            </Button>
+          )}
+          {task.status === 'in_progress' && (
+            <Button
+              size="sm"
+              className="h-7 text-xs bg-brand-purple hover:bg-brand-purple/90 text-white flex-1"
+              onClick={() => onUpdateStatus(task.id, 'under_review')}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+              Submit for Review
+            </Button>
+          )}
+          {task.status === 'rejected' && (
+            <Button
+              size="sm"
+              className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white flex-1"
+              onClick={() => onUpdateStatus(task.id, 'in_progress')}
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Re-attempt
+            </Button>
+          )}
+          {isLocked && (
+            <p className="text-[10px] text-gray-400 flex items-center gap-1 w-full justify-center py-0.5">
+              <Lock className="h-3 w-3" />
+              Awaiting admin review
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Admin Action Buttons */}
+      {!isWorkerView && onUpdateStatus && task.status === 'under_review' && (
+        <div className="px-3 pb-3 pt-1 border-t border-gray-100 flex gap-2">
+          <Button
+            size="sm"
+            className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white flex-1"
+            onClick={() => onUpdateStatus(task.id, 'completed')}
+          >
+            Approve
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50 flex-1"
+            onClick={() => onUpdateStatus(task.id, 'rejected')}
+          >
+            Reject
+          </Button>
+        </div>
+      )}
+    </div>
   )
 })

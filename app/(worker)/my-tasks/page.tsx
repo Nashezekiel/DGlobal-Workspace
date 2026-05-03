@@ -1,292 +1,318 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Task } from '@/types'
 import { TaskCard } from '@/components/TaskCard'
 import { PageHeader } from '@/components/PageHeader'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ClipboardList, Loader2, Filter, SortAsc, ArrowUpDown } from 'lucide-react'
+import { Filter, Loader2, ClipboardList } from 'lucide-react'
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  useDroppable,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 
-type RejectedSubmissionRow = {
-  task_id: string
-  status: 'rejected'
-  admin_feedback: string | null
-  submitted_at: string
+// Columns the worker is allowed to see and interact with
+const COLUMNS: { key: Task['status']; title: string; color: string; description: string }[] = [
+  { key: 'pending',      title: 'To Do',       color: 'bg-slate-100 border-slate-300',  description: 'Assigned tasks waiting to be started' },
+  { key: 'in_progress',  title: 'In Progress',  color: 'bg-blue-50 border-blue-200',     description: 'Tasks you are currently working on' },
+  { key: 'under_review', title: 'Review',       color: 'bg-amber-50 border-amber-200',   description: 'Submitted — awaiting admin approval' },
+  { key: 'rejected',     title: 'Rejected',     color: 'bg-red-50 border-red-200',       description: 'Needs revision based on admin feedback' },
+  { key: 'completed',    title: 'Done',         color: 'bg-green-50 border-green-200',   description: 'Approved and completed tasks' },
+]
+
+// Allowed drag transitions for workers
+const ALLOWED_TRANSITIONS: Partial<Record<Task['status'], Task['status'][]>> = {
+  pending:     ['in_progress'],
+  in_progress: ['pending', 'under_review'],
+  rejected:    ['in_progress'],
+}
+
+function DroppableColumn({ 
+  id, 
+  column, 
+  colTasks, 
+  updateTaskStatus 
+}: { 
+  id: string
+  column: typeof COLUMNS[number]
+  colTasks: Task[]
+  updateTaskStatus: (taskId: string, status: Task['status']) => void
+}) {
+  const { setNodeRef } = useDroppable({ id })
+
+  return (
+    <div
+      ref={setNodeRef}
+      id={id}
+      className={`rounded-xl border-2 ${column.color} flex flex-col min-h-[200px]`}
+    >
+      <div className="p-3 border-b border-inherit">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-semibold text-sm text-gray-800">{column.title}</h3>
+          <Badge variant="secondary" className="text-xs px-1.5 h-5">{colTasks.length}</Badge>
+        </div>
+        <p className="text-[10px] text-gray-400">{column.description}</p>
+      </div>
+
+      <SortableContext
+        id={id}
+        items={colTasks.map(t => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="flex flex-col gap-3 p-3 flex-1 min-h-[120px]">
+          {colTasks.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-xs text-gray-300">Drop here</p>
+            </div>
+          ) : (
+            colTasks.map(task => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onUpdateStatus={updateTaskStatus}
+                isWorkerView={true}
+              />
+            ))
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  )
 }
 
 export default function MyTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
-  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all')
-  const [sortBy, setSortBy] = useState<'due_date' | 'priority' | 'created_at'>('due_date')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [selectedColumn, setSelectedColumn] = useState<Task['status'] | 'all'>('all')
+  const [activeTask, setActiveTask] = useState<Task | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 250, tolerance: 5 } }),
+  )
 
   useEffect(() => {
     const fetchTasks = async () => {
       setLoading(true)
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setLoading(false)
-        return
-      }
+      if (!user) { setLoading(false); return }
 
-      const [tasksResult, submissionsResult] = await Promise.all([
-        supabase
-          .from('tasks')
-          .select('*')
-          .or(`assigned_to.eq.${user.id},and(assigned_role.eq.worker,assigned_to.is.null)`)
-          .order('due_date', { ascending: true }),
-        supabase
-          .from('submissions')
-          .select('task_id,status,admin_feedback,submitted_at')
-          .eq('worker_id', user.id)
-          .eq('status', 'rejected')
-          .order('submitted_at', { ascending: false }),
-      ])
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('*')
+        .or(`assigned_to.eq.${user.id},and(assigned_role.eq.worker,assigned_to.is.null)`)
+        .order('created_at', { ascending: false })
 
-      const rejectedFeedbackByTask = new Map<string, string>()
-      ;((submissionsResult.data || []) as RejectedSubmissionRow[]).forEach((submission) => {
-        if (!rejectedFeedbackByTask.has(submission.task_id) && submission.admin_feedback) {
-          rejectedFeedbackByTask.set(submission.task_id, submission.admin_feedback)
+      const { data: submissionsData } = await supabase
+        .from('submissions')
+        .select('task_id, status, admin_feedback, submitted_at')
+        .eq('worker_id', user.id)
+        .eq('status', 'rejected')
+        .order('submitted_at', { ascending: false })
+
+      const feedbackMap = new Map<string, string>()
+      ;(submissionsData || []).forEach((s: { task_id: string; admin_feedback: string | null }) => {
+        if (!feedbackMap.has(s.task_id) && s.admin_feedback) {
+          feedbackMap.set(s.task_id, s.admin_feedback)
         }
       })
 
-      const hydratedTasks = ((tasksResult.data || []) as Task[]).map((task) => {
-        const feedback = rejectedFeedbackByTask.get(task.id)
+      const hydrated = ((tasksData || []) as Task[]).map(task => {
+        const feedback = feedbackMap.get(task.id)
         if (feedback && task.status !== 'completed') {
           return { ...task, status: 'rejected' as const, admin_feedback: feedback }
         }
-
         return task
       })
 
-      setTasks(hydratedTasks)
+      setTasks(hydrated)
       setLoading(false)
     }
 
     fetchTasks()
   }, [])
 
-  const onUpdateStatus = useCallback(async (taskId: string, status: Task['status']) => {
-    setUpdatingTaskId(taskId)
+  const updateTaskStatus = useCallback(async (taskId: string, status: Task['status']) => {
     const { error } = await supabase
       .from('tasks')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', taskId)
 
     if (!error) {
-      setTasks((prev) =>
-        prev.map((task) => (task.id === taskId ? { ...task, status } : task)),
-      )
-    }
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t))
 
-    setUpdatingTaskId(null)
-  }, [])
+      // Notify admin when task is submitted for review
+      if (status === 'under_review') {
+        const { data: { user } } = await supabase.auth.getUser()
+        const task = tasks.find(t => t.id === taskId)
+        if (user && task) {
+          const { data: admins } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('role', 'admin')
 
-  const visibleTasks = useMemo(() => {
-    return tasks
-      .filter((task) => {
-        // Search filter
-        if (search.trim()) {
-          const term = search.toLowerCase()
-          if (
-            !task.title.toLowerCase().includes(term) &&
-            !task.description.toLowerCase().includes(term)
-          ) {
-            return false
+          if (admins && admins.length > 0) {
+            await supabase.from('notifications').insert(
+              admins.map((admin: { id: string }) => ({
+                user_id: admin.id,
+                type: 'submission',
+                title: 'Task Submitted for Review',
+                message: `"${task.title}" has been submitted for your review.`,
+                link: '/admin/tasks/review',
+                is_read: false,
+              }))
+            )
           }
         }
-
-        // Priority filter
-        if (priorityFilter !== 'all' && task.priority !== priorityFilter) {
-          return false
-        }
-
-        return true
-      })
-      .sort((a, b) => {
-        let comparison = 0
-
-        switch (sortBy) {
-          case 'due_date':
-            if (!a.due_date && !b.due_date) comparison = 0
-            else if (!a.due_date) comparison = 1
-            else if (!b.due_date) comparison = -1
-            else comparison = new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-            break
-          case 'priority':
-            const priorityOrder = { high: 3, medium: 2, low: 1 }
-            comparison = priorityOrder[a.priority] - priorityOrder[b.priority]
-            break
-          case 'created_at':
-            comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            break
-        }
-
-        return sortOrder === 'asc' ? comparison : -comparison
-      })
-  }, [tasks, search, priorityFilter, sortBy, sortOrder])
-
-  const columns: { key: Task['status']; title: string }[] = [
-    { key: 'pending', title: 'To Do' },
-    { key: 'in_progress', title: 'In Progress' },
-    { key: 'under_review', title: 'Review' },
-    { key: 'rejected', title: 'Rejected' },
-    { key: 'completed', title: 'Done' },
-  ]
-
-  const handleTaskUpdated = useCallback((updatedTask: Task) => {
-    setTasks(prev => prev.map(task => task.id === updatedTask.id ? updatedTask : task))
-  }, [])
-
-  const handleTaskDelete = useCallback(async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return
-
-    try {
-      await supabase.from('tasks').delete().eq('id', taskId)
-      setTasks(prev => prev.filter(task => task.id !== taskId))
-    } catch (error) {
-      console.error('Failed to delete task:', error)
+      }
     }
-  }, [])
+  }, [tasks])
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = tasks.find(t => t.id === event.active.id)
+    setActiveTask(task || null)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveTask(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const taskId = active.id as string
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    // over.id could be a column key or another task id
+    const targetStatus = COLUMNS.find(c => c.key === over.id)?.key
+      ?? tasks.find(t => t.id === over.id)?.status
+
+    if (!targetStatus || targetStatus === task.status) return
+
+    // Enforce worker transition rules
+    const allowed = ALLOWED_TRANSITIONS[task.status]
+    if (!allowed?.includes(targetStatus)) return
+
+    updateTaskStatus(taskId, targetStatus)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const taskId = active.id as string
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    const targetStatus = COLUMNS.find(c => c.key === over.id)?.key
+      ?? tasks.find(t => t.id === over.id)?.status
+
+    if (!targetStatus || targetStatus === task.status) return
+
+    const allowed = ALLOWED_TRANSITIONS[task.status]
+    if (!allowed?.includes(targetStatus)) return
+
+    // Optimistic update for smooth UI
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: targetStatus } : t))
+  }
+
+  const visibleTasks = tasks.filter(task => {
+    if (search.trim()) {
+      const term = search.toLowerCase()
+      if (!task.title.toLowerCase().includes(term) && !task.description.toLowerCase().includes(term)) return false
+    }
+    if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false
+    return true
+  })
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="My Tasks" 
-        subtitle="Track work in a Kanban board view."
-      />
+      <PageHeader title="My Tasks" subtitle="Your personal Kanban board — drag tasks or use the action buttons." />
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-              <div className="flex flex-col md:flex-row gap-4 md:items-center flex-1">
-                <Input
-                  placeholder="Search tasks by title or description..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="md:max-w-sm"
-                />
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-gray-500" />
-                  <Select
-                    value={priorityFilter}
-                    onValueChange={(value: 'all' | 'low' | 'medium' | 'high') => setPriorityFilter(value)}
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Priority</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4 text-gray-500" />
-                  <Select
-                    value={sortBy}
-                    onValueChange={(value: 'due_date' | 'priority' | 'created_at') => setSortBy(value)}
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="due_date">Due Date</SelectItem>
-                      <SelectItem value="priority">Priority</SelectItem>
-                      <SelectItem value="created_at">Created</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  >
-                    <SortAsc className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <ClipboardList className="h-4 w-4" />
-                <span>{visibleTasks.length} visible tasks</span>
-              </div>
-            </div>
-
-            {/* Mobile column selector */}
-            <div className="lg:hidden">
-              <Select
-                value={selectedColumn}
-                onValueChange={(value: Task['status'] | 'all') => setSelectedColumn(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select column" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Columns</SelectItem>
-                  {columns.map((column) => (
-                    <SelectItem key={column.key} value={column.key}>
-                      {column.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <Input
+          placeholder="Search tasks..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="sm:max-w-xs"
+        />
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-400" />
+          <Select
+            value={priorityFilter}
+            onValueChange={(v: 'all' | 'low' | 'medium' | 'high') => setPriorityFilter(v)}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500 ml-auto">
+          <ClipboardList className="h-4 w-4" />
+          <span>{visibleTasks.length} tasks</span>
+        </div>
+      </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-gray-500">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Loading tasks...</span>
+        <div className="flex items-center gap-2 text-gray-500 py-12 justify-center">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading your tasks...</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
-          {columns
-            .filter((column) => selectedColumn === 'all' || column.key === selectedColumn)
-            .map((column) => {
-              const columnTasks = visibleTasks.filter((task) => task.status === column.key)
-
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+            {COLUMNS.map(column => {
+              const colTasks = visibleTasks.filter(t => t.status === column.key)
               return (
-                <Card key={column.key} className="h-fit">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-base">
-                      <span>{column.title}</span>
-                      <Badge variant="secondary">{columnTasks.length}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {columnTasks.length === 0 ? (
-                      <p className="text-sm text-gray-500">No tasks in this column.</p>
-                    ) : (
-                      columnTasks.map((task) => (
-                        <div key={task.id} className={updatingTaskId === task.id ? 'opacity-70' : ''}>
-                          <TaskCard
-                            task={task}
-                            onUpdateStatus={onUpdateStatus}
-                            onEdit={handleTaskUpdated}
-                            onDelete={handleTaskDelete}
-                            compact
-                          />
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
+                <DroppableColumn
+                  key={column.key}
+                  id={column.key}
+                  column={column}
+                  colTasks={colTasks}
+                  updateTaskStatus={updateTaskStatus}
+                />
               )
             })}
-        </div>
+          </div>
+
+          {/* Drag Overlay (ghost card while dragging) */}
+          <DragOverlay>
+            {activeTask && (
+              <div className="rotate-2 scale-105 opacity-90">
+                <TaskCard task={activeTask} isWorkerView={true} />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
       )}
     </div>
   )

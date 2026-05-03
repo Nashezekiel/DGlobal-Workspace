@@ -8,10 +8,22 @@ export default async function AdminLayout({
 }) {
   const supabase = createClient()
 
-  const { count } = await supabase
+  const { count: pendingUsersCount } = await supabase
     .from('profiles')
     .select('id', { count: 'exact', head: true })
     .eq('approval_status', 'pending')
 
-  return <AdminShell initialPendingUsersCount={count || 0}>{children}</AdminShell>
+  const { count: reviewTasksCount } = await supabase
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'under_review')
+
+  return (
+    <AdminShell 
+      initialPendingUsersCount={pendingUsersCount || 0}
+      initialReviewTasksCount={reviewTasksCount || 0}
+    >
+      {children}
+    </AdminShell>
+  )
 }

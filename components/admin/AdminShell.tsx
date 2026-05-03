@@ -13,7 +13,7 @@ import dgLogo from '@/app/DGlogo.png'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
-  { href: '/admin/review', label: 'Review Queue', icon: CheckSquare },
+  { href: '/admin/tasks/review', label: 'Review Queue', icon: CheckSquare },
   { href: '/admin/tasks/new', label: 'Task Creation', icon: Plus },
   { href: '/admin/user-approvals', label: 'User Approvals', icon: UserCheck },
   { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
@@ -24,9 +24,11 @@ const navItems = [
 export function AdminShell({
   children,
   initialPendingUsersCount = 0,
+  initialReviewTasksCount = 0,
 }: {
   children: React.ReactNode
   initialPendingUsersCount?: number
+  initialReviewTasksCount?: number
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -102,7 +104,17 @@ export function AdminShell({
                     }`}
                   >
                     <Icon className="mr-3 h-5 w-5" />
-                    {label}
+                    <span className="flex-1">{label}</span>
+                    {href === '/admin/user-approvals' && initialPendingUsersCount > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-brand-purple bg-brand-gold rounded-full">
+                        {initialPendingUsersCount}
+                      </span>
+                    )}
+                    {href === '/admin/tasks/review' && initialReviewTasksCount > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                        {initialReviewTasksCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               )
