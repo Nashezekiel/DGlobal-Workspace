@@ -38,6 +38,7 @@ export interface Profile {
   email: string
   full_name: string
   role: 'admin' | 'worker'
+  job_role?: string
   phone?: string
   location?: string
   bio?: string

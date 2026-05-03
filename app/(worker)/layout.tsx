@@ -4,7 +4,7 @@ import { useState, lazy, Suspense } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ClipboardList, MessageSquare, FileText, Bug, LogOut, Home, Bell, Menu, X } from 'lucide-react'
+import { ClipboardList, MessageSquare, FileText, Bug, LogOut, Home, Bell, Menu, X, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import dgLogo from '@/app/DGlogo.png'
@@ -20,6 +20,7 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/reports', label: 'Reports', icon: FileText },
   { href: '/report-bug', label: 'Report Bug', icon: Bug },
+  { href: '/profile', label: 'Profile Settings', icon: User },
 ]
 
 export default function WorkerLayout({

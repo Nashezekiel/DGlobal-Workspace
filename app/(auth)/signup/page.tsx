@@ -71,7 +71,7 @@ export default function SignupPage() {
       await supabase
         .from('profiles')
         .update({
-          phone_number: phoneNumber.trim(),
+          phone: phoneNumber.trim(),
           location: location.trim(),
           job_role: jobRole,
         })
