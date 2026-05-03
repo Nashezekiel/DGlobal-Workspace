@@ -329,6 +329,12 @@ export default function ProfilePage() {
                 <span className="text-gray-600">{user?.email || 'No email'}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
+                <Shield className="h-4 w-4 text-brand-purple" />
+                <span className="font-medium text-brand-purple capitalize">
+                  {user?.job_role || user?.role || 'Not set'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
                 <Calendar className="h-4 w-4 text-gray-500" />
                 <span className="text-gray-600">
                   Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
