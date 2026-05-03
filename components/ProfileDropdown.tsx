@@ -15,7 +15,7 @@ import {
 
 export function ProfileDropdown() {
   const router = useRouter()
-  const [user, setUser] = useState({
+  const [user, setUser] = useState<{ full_name: string; email: string; role?: string; avatar_url?: string }>({
     full_name: 'User',
     email: 'No email',
   })
@@ -27,13 +27,15 @@ export function ProfileDropdown() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, role, job_role, avatar_url')
         .eq('id', authUser.id)
         .single()
 
       setUser({
         full_name: profile?.full_name || authUser.email?.split('@')[0] || 'User',
         email: authUser.email || 'No email',
+        role: profile?.job_role || profile?.role || undefined,
+        avatar_url: profile?.avatar_url,
       })
     }
     loadUser()
@@ -48,7 +50,11 @@ export function ProfileDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 hover:bg-brand-purple/10 hover:text-brand-purple">
-          <User className="h-4 w-4 text-brand-purple" />
+          {user.avatar_url ? (
+            <img src={user.avatar_url} alt="Profile" className="h-6 w-6 rounded-full object-cover border border-brand-purple/20" />
+          ) : (
+            <User className="h-4 w-4 text-brand-purple" />
+          )}
           <span className="hidden sm:block font-medium text-brand-purple">{user.full_name}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -57,6 +63,7 @@ export function ProfileDropdown() {
           <div className="flex flex-col">
             <span className="font-semibold text-brand-purple">{user.full_name}</span>
             <span className="text-xs text-gray-500">{user.email}</span>
+            {user.role && <span className="text-xs font-medium text-brand-gold mt-0.5 capitalize">{user.role}</span>}
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

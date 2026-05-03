@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { User, Mail, MapPin, Calendar, Save, Shield, Bell } from 'lucide-react'
+import { User, Mail, MapPin, Calendar, Save, Shield, Bell, Camera } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -42,6 +42,41 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [user, setUser] = useState<Profile | null>(null)
+  const [avatarFile, setAvatarFile] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new window.Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        canvas.width = 300
+        canvas.height = 300
+        
+        const scale = Math.max(300 / img.width, 300 / img.height)
+        const w = img.width * scale
+        const h = img.height * scale
+        const x = (300 - w) / 2
+        const y = (300 - h) / 2
+        
+        if (ctx) {
+          ctx.fillStyle = 'white'
+          ctx.fillRect(0, 0, 300, 300)
+          ctx.drawImage(img, x, y, w, h)
+          const base64 = canvas.toDataURL('image/jpeg', 0.8)
+          setAvatarFile(base64)
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -74,6 +109,9 @@ export default function ProfilePage() {
       if (data) {
         const profile = data as unknown as Profile
         setUser(profile)
+        if (profile.avatar_url) {
+          setAvatarFile(profile.avatar_url)
+        }
         form.reset({
           full_name: profile.full_name || '',
           email: profile.email || '',
@@ -104,6 +142,7 @@ export default function ProfilePage() {
           job_role: values.job_role,
           bio: values.bio,
           updated_at: new Date().toISOString(),
+          ...(avatarFile ? { avatar_url: avatarFile } : {}),
         })
         .eq('id', authUser.id)
 
@@ -142,9 +181,26 @@ export default function ProfilePage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                    {form.watch('full_name')?.charAt(0).toUpperCase() || 'U'}
+                  <div 
+                    className="relative w-20 h-20 rounded-full group cursor-pointer overflow-hidden bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl font-bold shadow-md border-2 border-transparent hover:border-brand-purple transition-all"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {avatarFile ? (
+                      <img src={avatarFile} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      form.watch('full_name')?.charAt(0).toUpperCase() || 'U'
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
                   </div>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    ref={fileInputRef} 
+                    onChange={handleImageChange} 
+                  />
                   <div>
                     <h3 className="font-semibold text-lg">{form.watch('full_name') || 'User'}</h3>
                     <Badge variant="secondary" className="capitalize">
@@ -299,28 +355,28 @@ export default function ProfilePage() {
                   <p className="font-medium text-sm">Email Notifications</p>
                   <p className="text-xs text-gray-500">Receive email updates</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch defaultChecked className="data-[state=checked]:bg-brand-purple data-[state=unchecked]:bg-brand-purple" />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-sm">Task Notifications</p>
                   <p className="text-xs text-gray-500">Get notified about task changes</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch defaultChecked className="data-[state=checked]:bg-brand-purple data-[state=unchecked]:bg-brand-purple" />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-sm">Message Notifications</p>
                   <p className="text-xs text-gray-500">Get notified about new messages</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch defaultChecked className="data-[state=checked]:bg-brand-purple data-[state=unchecked]:bg-brand-purple" />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-sm">Sound Alerts</p>
                   <p className="text-xs text-gray-500">Play sound for notifications</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch defaultChecked className="data-[state=checked]:bg-brand-purple data-[state=unchecked]:bg-brand-purple" />
               </div>
             </CardContent>
           </Card>

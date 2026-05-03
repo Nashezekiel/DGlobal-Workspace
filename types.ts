@@ -39,6 +39,7 @@ export interface Profile {
   full_name: string
   role: 'admin' | 'worker'
   job_role?: string
+  avatar_url?: string
   phone?: string
   location?: string
   bio?: string

@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Check, Trash2, Settings, Clock, MessageSquare, AlertCircle, CheckCircle, Zap } from 'lucide-react'
+import { Bell, Check, Trash2, Settings, Clock, MessageSquare, AlertCircle, CheckCircle, Volume2, VolumeX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { Notification } from '@/types'
 import { supabase } from '@/lib/supabase/client'
-import { useNotificationSimulation, playNotificationSound, showVisualAlert, requestNotificationPermission } from '@/components/NotificationSimulator'
+import { playNotificationSound, requestNotificationPermission } from '@/components/NotificationSimulator'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export function NotificationBell() {
@@ -15,7 +15,14 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
-  const { isSimulating, simulateNotification, startSimulation, stopSimulation } = useNotificationSimulation()
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+
+  useEffect(() => {
+    const savedSound = localStorage.getItem('dgew_notification_sound')
+    if (savedSound !== null) {
+      setIsSoundEnabled(savedSound === 'true')
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -36,7 +43,13 @@ export function NotificationBell() {
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
-        }, () => {
+        }, (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const soundSetting = localStorage.getItem('dgew_notification_sound')
+            if (soundSetting !== 'false') {
+              playNotificationSound()
+            }
+          }
           fetchNotifications(user.id)
         })
         .subscribe()
@@ -64,7 +77,7 @@ export function NotificationBell() {
         .eq('user_id', targetUserId)
         .order('created_at', { ascending: false })
         .limit(10)
-      
+
       if (data) {
         setNotifications(data)
         setUnreadCount(data.filter(n => !n.is_read).length)
@@ -80,8 +93,8 @@ export function NotificationBell() {
         .from('notifications')
         .update({ is_read: true })
         .eq('id', notificationId)
-      
-      setNotifications(prev => 
+
+      setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       )
       setUnreadCount(prev => Math.max(0, prev - 1))
@@ -99,11 +112,27 @@ export function NotificationBell() {
         .update({ is_read: true })
         .eq('user_id', userId)
         .eq('is_read', false)
-      
+
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
       setUnreadCount(0)
     } catch (error) {
       console.error('Failed to mark all as read:', error)
+    }
+  }
+
+  const clearAllNotifications = async () => {
+    try {
+      if (!userId) return
+
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId)
+
+      setNotifications([])
+      setUnreadCount(0)
+    } catch (error) {
+      console.error('Failed to clear notifications:', error)
     }
   }
 
@@ -113,7 +142,7 @@ export function NotificationBell() {
         .from('notifications')
         .delete()
         .eq('id', notificationId)
-      
+
       setNotifications(prev => {
         const notification = prev.find(n => n.id === notificationId)
         setUnreadCount(prev => notification && !notification.is_read ? Math.max(0, prev - 1) : prev)
@@ -191,7 +220,7 @@ export function NotificationBell() {
         <Button variant="ghost" size="icon" className="relative hover:bg-brand-purple/10">
           <Bell className="h-5 w-5 text-brand-purple" />
           {unreadCount > 0 && (
-            <Badge 
+            <Badge
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-brand-gold text-brand-purple border-none hover:bg-brand-gold/90"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -202,19 +231,31 @@ export function NotificationBell() {
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between text-brand-purple">
           <span>Notifications</span>
-          {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={markAllAsRead}
-              className="text-xs text-brand-purple hover:text-brand-purple/80 hover:bg-brand-purple/10"
-            >
-              Mark all read
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs h-7 px-2 text-brand-purple hover:text-brand-purple/80 hover:bg-brand-purple/10"
+              >
+                Mark read
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllNotifications}
+                className="text-xs h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        
+
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-brand-purple/60">
@@ -225,9 +266,8 @@ export function NotificationBell() {
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 border-b last:border-b-0 hover:bg-brand-purple/5 transition-colors ${
-                  !notification.is_read ? 'bg-brand-purple/10' : ''
-                }`}
+                className={`p-3 border-b last:border-b-0 hover:bg-brand-purple/5 transition-colors ${!notification.is_read ? 'bg-brand-purple/10' : ''
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-lg ${getNotificationColor(notification.type)}`}>
@@ -269,11 +309,11 @@ export function NotificationBell() {
             ))
           )}
         </div>
-        
+
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="focus:bg-brand-purple/10 focus:text-brand-purple cursor-pointer">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full justify-start text-brand-purple"
             onClick={() => setIsOpen(false)}
           >
@@ -282,42 +322,30 @@ export function NotificationBell() {
           </Button>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {process.env.NODE_ENV !== 'production' && (
-          <div className="p-2">
-            <p className="text-xs text-brand-purple/70 mb-2 px-2 font-medium">Simulation Controls (Dev)</p>
+        <DropdownMenuSeparator />
+        <div className="p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-brand-purple">Notification Sound</span>
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10"
-              onClick={() => {
-                simulateNotification()
-                playNotificationSound()
-                showVisualAlert()
+              onClick={(e) => {
+                e.preventDefault()
+                const newValue = !isSoundEnabled
+                setIsSoundEnabled(newValue)
+                localStorage.setItem('dgew_notification_sound', String(newValue))
+                if (newValue) playNotificationSound()
               }}
+              className={`h-8 px-3 border-brand-purple/20 transition-colors ${isSoundEnabled ? 'bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20' : 'text-gray-500 hover:bg-gray-100'}`}
             >
-              <Zap className="h-4 w-4 mr-2" />
-              Test Notification
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start mt-1 border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10"
-              onClick={() => (isSimulating ? stopSimulation() : startSimulation())}
-            >
-              {isSimulating ? (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Stop Simulation
-                </>
+              {isSoundEnabled ? (
+                <><Volume2 className="h-4 w-4 mr-2" /> On</>
               ) : (
-                <>
-                  <Zap className="h-4 w-4 mr-2" />
-                  Start Simulation
-                </>
+                <><VolumeX className="h-4 w-4 mr-2" /> Off</>
               )}
             </Button>
           </div>
-        )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )
