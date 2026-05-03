@@ -108,7 +108,7 @@ export default function AdminTaskReviewPage() {
         <div className="flex flex-col items-center justify-center py-20 text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
           <Inbox className="h-12 w-12 text-gray-300 mb-3" />
           <p className="text-lg font-medium text-gray-600">No tasks to review</p>
-          <p className="text-sm">All caught up! Workers haven't submitted any new tasks.</p>
+          <p className="text-sm">All caught up! Workers haven&apos;t submitted any new tasks.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
