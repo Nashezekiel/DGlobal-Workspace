@@ -109,7 +109,6 @@ export default async function DashboardPage() {
                       <TaskCard 
                         key={task.id} 
                         task={task} 
-                        showActions={false}
                       />
                     ))
                   ) : (
