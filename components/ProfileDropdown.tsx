@@ -47,24 +47,24 @@ export function ProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2">
-          <User className="h-4 w-4" />
-          <span className="hidden sm:block">{user.full_name}</span>
+        <Button variant="ghost" className="flex items-center gap-2 hover:bg-brand-purple/10 hover:text-brand-purple">
+          <User className="h-4 w-4 text-brand-purple" />
+          <span className="hidden sm:block font-medium text-brand-purple">{user.full_name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem>
           <div className="flex flex-col">
-            <span className="font-medium">{user.full_name}</span>
-            <span className="text-sm text-gray-500">{user.email}</span>
+            <span className="font-semibold text-brand-purple">{user.full_name}</span>
+            <span className="text-xs text-gray-500">{user.email}</span>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push('/profile')}>
+        <DropdownMenuItem className="focus:bg-brand-purple/10 focus:text-brand-purple cursor-pointer" onClick={() => router.push('/profile')}>
           <Settings className="h-4 w-4 mr-2" />
           Profile Settings
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem className="focus:bg-red-50 focus:text-red-600 text-red-600 cursor-pointer" onClick={handleSignOut}>
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </DropdownMenuItem>

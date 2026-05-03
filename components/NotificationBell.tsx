@@ -127,17 +127,17 @@ export function NotificationBell() {
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'task':
-        return <CheckCircle className="h-4 w-4 text-blue-600" />
+        return <CheckCircle className="h-4 w-4 text-brand-purple" />
       case 'message':
-        return <MessageSquare className="h-4 w-4 text-green-600" />
+        return <MessageSquare className="h-4 w-4 text-brand-purple" />
       case 'system':
         return <Settings className="h-4 w-4 text-gray-600" />
       case 'submission':
-        return <Check className="h-4 w-4 text-purple-600" />
+        return <Check className="h-4 w-4 text-brand-gold" />
       case 'deadline':
-        return <Clock className="h-4 w-4 text-orange-600" />
+        return <Clock className="h-4 w-4 text-brand-gold" />
       case 'mention':
-        return <AlertCircle className="h-4 w-4 text-red-600" />
+        return <AlertCircle className="h-4 w-4 text-brand-purple" />
       default:
         return <Bell className="h-4 w-4 text-gray-600" />
     }
@@ -146,17 +146,17 @@ export function NotificationBell() {
   const getNotificationColor = (type: Notification['type']) => {
     switch (type) {
       case 'task':
-        return 'bg-blue-50 border-blue-200'
+        return 'bg-brand-purple/10 border-brand-purple/20'
       case 'message':
-        return 'bg-green-50 border-green-200'
+        return 'bg-brand-purple/10 border-brand-purple/20'
       case 'system':
         return 'bg-gray-50 border-gray-200'
       case 'submission':
-        return 'bg-purple-50 border-purple-200'
+        return 'bg-brand-gold/20 border-brand-gold/30'
       case 'deadline':
-        return 'bg-orange-50 border-orange-200'
+        return 'bg-brand-gold/20 border-brand-gold/30'
       case 'mention':
-        return 'bg-red-50 border-red-200'
+        return 'bg-brand-purple/10 border-brand-purple/20'
       default:
         return 'bg-gray-50 border-gray-200'
     }
@@ -188,12 +188,11 @@ export function NotificationBell() {
       }}
     >
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="relative hover:bg-brand-purple/10">
+          <Bell className="h-5 w-5 text-brand-purple" />
           {unreadCount > 0 && (
             <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-brand-gold text-brand-purple border-none hover:bg-brand-gold/90"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -201,14 +200,14 @@ export function NotificationBell() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between">
+        <DropdownMenuLabel className="flex items-center justify-between text-brand-purple">
           <span>Notifications</span>
           {unreadCount > 0 && (
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={markAllAsRead}
-              className="text-xs"
+              className="text-xs text-brand-purple hover:text-brand-purple/80 hover:bg-brand-purple/10"
             >
               Mark all read
             </Button>
@@ -218,16 +217,16 @@ export function NotificationBell() {
         
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              <Bell className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <div className="p-4 text-center text-brand-purple/60">
+              <Bell className="h-8 w-8 mx-auto mb-2 text-brand-purple/30" />
               <p className="text-sm">No notifications</p>
             </div>
           ) : (
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
-                  !notification.is_read ? 'bg-blue-50/50' : ''
+                className={`p-3 border-b last:border-b-0 hover:bg-brand-purple/5 transition-colors ${
+                  !notification.is_read ? 'bg-brand-purple/10' : ''
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -235,13 +234,13 @@ export function NotificationBell() {
                     {getNotificationIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-semibold text-brand-purple truncate">
                       {notification.title}
                     </p>
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                    <p className="text-xs text-gray-700 mt-1 line-clamp-2">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-[10px] font-medium text-brand-purple/60 mt-1">
                       {formatTime(notification.created_at)}
                     </p>
                   </div>
@@ -250,7 +249,7 @@ export function NotificationBell() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-6 w-6 text-brand-purple hover:bg-brand-purple/10 hover:text-brand-purple"
                         onClick={() => markAsRead(notification.id)}
                       >
                         <Check className="h-3 w-3" />
@@ -259,7 +258,7 @@ export function NotificationBell() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-red-500 hover:text-red-600"
+                      className="h-6 w-6 text-red-400 hover:text-red-600 hover:bg-red-50"
                       onClick={() => deleteNotification(notification.id)}
                     >
                       <Trash2 className="h-3 w-3" />
@@ -272,10 +271,10 @@ export function NotificationBell() {
         </div>
         
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className="focus:bg-brand-purple/10 focus:text-brand-purple cursor-pointer">
           <Button 
             variant="ghost" 
-            className="w-full justify-start"
+            className="w-full justify-start text-brand-purple"
             onClick={() => setIsOpen(false)}
           >
             <Settings className="h-4 w-4 mr-2" />
@@ -285,11 +284,11 @@ export function NotificationBell() {
         <DropdownMenuSeparator />
         {process.env.NODE_ENV !== 'production' && (
           <div className="p-2">
-            <p className="text-xs text-gray-500 mb-2 px-2">Simulation Controls (Dev)</p>
+            <p className="text-xs text-brand-purple/70 mb-2 px-2 font-medium">Simulation Controls (Dev)</p>
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start"
+              className="w-full justify-start border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10"
               onClick={() => {
                 simulateNotification()
                 playNotificationSound()
@@ -302,7 +301,7 @@ export function NotificationBell() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start mt-1"
+              className="w-full justify-start mt-1 border-brand-purple/20 text-brand-purple hover:bg-brand-purple/10"
               onClick={() => (isSimulating ? stopSimulation() : startSimulation())}
             >
               {isSimulating ? (
