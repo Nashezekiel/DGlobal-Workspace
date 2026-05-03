@@ -78,7 +78,7 @@ export function AdminShell({
                 priority
               />
             </div>
-            <h1 className="text-2xl font-bold">DGG-Workspace</h1>
+            <h1 className="text-lg font-bold truncate">DGG-Workspace</h1>
           </div>
           <button
             className="md:hidden rounded-md p-2 hover:bg-white/10 transition-colors"
@@ -135,7 +135,7 @@ export function AdminShell({
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <header className="bg-white shadow-sm px-4 md:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">

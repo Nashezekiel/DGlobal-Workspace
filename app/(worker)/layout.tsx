@@ -63,7 +63,7 @@ export default function WorkerLayout({
               />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">DGG-Workspace</h1>
+              <h1 className="text-lg font-bold text-gray-900 truncate">DGG-Workspace</h1>
               <p className="text-xs text-gray-500">Task Management</p>
             </div>
           </div>
@@ -118,29 +118,36 @@ export default function WorkerLayout({
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2">
+            {/* Left side: Menu toggle + Title */}
+            <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="md:hidden -ml-2 text-gray-600 hover:text-brand-purple hover:bg-purple-50"
                 onClick={() => setMobileMenuOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-none">
                 {navItems.find(item => item.href === pathname)?.label || 'Dashboard'}
               </h2>
             </div>
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <Suspense fallback={<div className="w-40 h-9 bg-gray-200 animate-pulse rounded-md" />}>
-                <GlobalSearch />
-              </Suspense>
+            
+            {/* Right side icons (always on top row next to title) */}
+            <div className="flex items-center space-x-2 order-2 md:order-3">
               <Suspense fallback={<div className="w-9 h-9 bg-gray-200 animate-pulse rounded-full" />}>
                 <NotificationBell />
               </Suspense>
               <Suspense fallback={<div className="w-9 h-9 bg-gray-200 animate-pulse rounded-full" />}>
                 <ProfileDropdown />
+              </Suspense>
+            </div>
+
+            {/* Search Bar (wraps to full width on mobile, inline on desktop) */}
+            <div className="w-full order-3 md:order-2 md:w-auto md:ml-auto">
+              <Suspense fallback={<div className="w-full md:w-40 h-9 bg-gray-200 animate-pulse rounded-md" />}>
+                <GlobalSearch />
               </Suspense>
             </div>
           </div>

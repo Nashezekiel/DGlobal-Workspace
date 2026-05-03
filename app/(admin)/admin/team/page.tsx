@@ -105,73 +105,79 @@ export default function TeamManagementPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Team Management" subtitle="Manage the Elite 8 interns." />
+      <PageHeader title="Team Management" subtitle="Manage the Team-Work Elite Workers/Interns" />
 
       <Card>
         <CardHeader>
           <CardTitle>Workers</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Role/Track</TableHead>
-                <TableHead>Tasks Assigned</TableHead>
-                <TableHead>Tasks Completed</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {workers.map(worker => (
-                <TableRow key={worker.id}>
-                  <TableCell>{worker.full_name}</TableCell>
-                  <TableCell>Intern</TableCell>
-                  <TableCell>{worker.tasksAssigned}</TableCell>
-                  <TableCell>{worker.tasksCompleted}</TableCell>
-                  <TableCell>Active</TableCell>
-                  <TableCell>
-                    <Dialog
-                      open={messageDialog.open && messageDialog.worker?.id === worker.id}
-                      onOpenChange={(open) => setMessageDialog({ open, worker: open ? worker : null })}
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setMessageDialog({ open: true, worker })}
-                        >
-                          Quick Message
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Message {worker.full_name}</DialogTitle>
-                        </DialogHeader>
-                        <Textarea
-                          placeholder="Enter your message"
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                        />
-                        <DialogFooter>
-                          <Button
-                            onClick={() => setMessageDialog({ open: false, worker: null })}
-                            variant="outline"
-                          >
-                            Cancel
-                          </Button>
-                          <Button onClick={handleSendMessage} disabled={!message.trim()}>
-                            Send
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[800px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role/Track</TableHead>
+                  <TableHead>Tasks Assigned</TableHead>
+                  <TableHead>Tasks Completed</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {workers.map(worker => (
+                  <TableRow key={worker.id}>
+                    <TableCell className="font-medium">{worker.full_name}</TableCell>
+                    <TableCell>Intern</TableCell>
+                    <TableCell>{worker.tasksAssigned}</TableCell>
+                    <TableCell>{worker.tasksCompleted}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                        Active
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Dialog
+                        open={messageDialog.open && messageDialog.worker?.id === worker.id}
+                        onOpenChange={(open) => setMessageDialog({ open, worker: open ? worker : null })}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setMessageDialog({ open: true, worker })}
+                          >
+                            Quick Message
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Message {worker.full_name}</DialogTitle>
+                          </DialogHeader>
+                          <Textarea
+                            placeholder="Enter your message"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                          />
+                          <DialogFooter>
+                            <Button
+                              onClick={() => setMessageDialog({ open: false, worker: null })}
+                              variant="outline"
+                            >
+                              Cancel
+                            </Button>
+                            <Button onClick={handleSendMessage} disabled={!message.trim()}>
+                              Send
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
