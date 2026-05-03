@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Send, Hash, Users, Clock, MoreVertical, Plus, Trash2, Reply, X } from 'lucide-react'
+import { Send, Hash, Users, MoreVertical, Plus, Trash2, Reply, X } from 'lucide-react'
 import { Room } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -31,7 +31,6 @@ export default function MessagesPage() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
@@ -467,19 +466,10 @@ export default function MessagesPage() {
                 </div>
               )}
               
-              <div className="p-4">
-                {isTyping && (
-                <div className="text-xs text-gray-500 mb-2">
-                  Someone is typing...
-                </div>
-              )}
               <div className="flex gap-2">
                 <Input
                   value={newMessage}
-                  onChange={(e) => {
-                    setNewMessage(e.target.value)
-                    setIsTyping(e.target.value.length > 0)
-                  }}
+                  onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Type a message..."
                   className="flex-1"
