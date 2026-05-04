@@ -35,13 +35,13 @@ const formSchema = z.object({
   due_date: z.string().min(1, 'Due date is required'),
   priority: z.enum(['low', 'medium', 'high']),
   assign_type: z.enum(['all', 'specific']),
-  assigned_to: z.string().optional(),
+  assigned_to: z.array(z.string()).optional(),
 }).superRefine((values, ctx) => {
-  if (values.assign_type === 'specific' && !values.assigned_to) {
+  if (values.assign_type === 'specific' && (!values.assigned_to || values.assigned_to.length === 0)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['assigned_to'],
-      message: 'Please select an intern',
+      message: 'Please select at least one intern',
     })
   }
 
@@ -71,7 +71,7 @@ export default function TaskCreationPage() {
       due_date: '',
       priority: 'medium',
       assign_type: 'all',
-      assigned_to: '',
+      assigned_to: [],
     },
   })
 
@@ -92,7 +92,8 @@ export default function TaskCreationPage() {
   }, [])
 
   const assignmentType = form.watch('assign_type')
-  const recipientsCount = assignmentType === 'specific' ? 1 : workers.length
+  const selectedAssignees = form.watch('assigned_to') || []
+  const recipientsCount = assignmentType === 'specific' ? selectedAssignees.length : workers.length
   const selectedPriority = form.watch('priority')
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -106,27 +107,38 @@ export default function TaskCreationPage() {
       return
     }
 
-    const taskData = {
+    const baseTaskData = {
       title: values.title.trim(),
       description: values.description.trim(),
       due_date: values.due_date,
       priority: values.priority,
       status: 'pending',
       created_by: user.id,
-      assigned_role: values.assign_type === 'all' ? 'worker' : null,
-      assigned_to: values.assign_type === 'specific' ? values.assigned_to : null,
+      assigned_role: 'worker', // All tasks are specifically assigned to workers now
+    }
+
+    let recipients: string[] = []
+    let tasksToInsert: Record<string, string>[] = []
+
+    if (values.assign_type === 'all') {
+      recipients = workers.map((worker) => worker.id)
+      tasksToInsert = recipients.map(workerId => ({
+        ...baseTaskData,
+        assigned_to: workerId,
+      }))
+    } else {
+      recipients = values.assigned_to || []
+      tasksToInsert = recipients.map(workerId => ({
+        ...baseTaskData,
+        assigned_to: workerId,
+      }))
     }
 
     const { error } = await supabase
       .from('tasks')
-      .insert(taskData)
+      .insert(tasksToInsert)
 
     if (!error) {
-      const recipients =
-        values.assign_type === 'specific' && values.assigned_to
-          ? [values.assigned_to]
-          : workers.map((worker) => worker.id)
-
       if (recipients.length > 0) {
         const { error: notificationError } = await supabase.from('notifications').insert(
           recipients.map((userId) => ({
@@ -283,7 +295,7 @@ export default function TaskCreationPage() {
                       onValueChange={(nextValue: 'all' | 'specific') => {
                         field.onChange(nextValue)
                         if (nextValue === 'all') {
-                          form.setValue('assigned_to', '')
+                          form.setValue('assigned_to', [])
                         }
                       }}
                       value={field.value}
@@ -309,21 +321,31 @@ export default function TaskCreationPage() {
                   name="assigned_to"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Select Intern</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an intern" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {workers.map(worker => (
-                            <SelectItem key={worker.id} value={worker.id}>
+                      <FormLabel>Select Interns</FormLabel>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {workers.map(worker => {
+                          const isSelected = field.value?.includes(worker.id)
+                          return (
+                            <Badge
+                              key={worker.id}
+                              variant={isSelected ? 'default' : 'outline'}
+                              className={`cursor-pointer text-sm py-1.5 px-3 select-none transition-colors ${
+                                isSelected ? 'bg-brand-purple hover:bg-brand-purple/90' : 'hover:bg-gray-100'
+                              }`}
+                              onClick={() => {
+                                const currentValue = field.value || []
+                                if (isSelected) {
+                                  field.onChange(currentValue.filter((id: string) => id !== worker.id))
+                                } else {
+                                  field.onChange([...currentValue, worker.id])
+                                }
+                              }}
+                            >
                               {worker.full_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Badge>
+                          )
+                        })}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
