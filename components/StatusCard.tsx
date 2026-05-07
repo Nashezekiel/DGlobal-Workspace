@@ -14,15 +14,15 @@ interface StatusCardProps {
 
 export const StatusCard = memo(function StatusCard({ icon: Icon, label, count, color, trend }: StatusCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200 motion-safe:animate-fade-up">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 pr-4 pl-2 hover:shadow-md transition-shadow duration-200 motion-safe:animate-fade-up">
+      <div className="flex items-center justify-start gap-4">
         <div className="flex items-center">
           <div className={`flex-shrink-0 p-3 rounded-lg ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
             <Icon className={`h-6 w-6 ${color}`} />
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-gray-600">{label}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{count}</p>
+          <div className="ml-2">
+            <p className="text-xs font-medium text-gray-600">{label}</p>
+            <p className="text-lg font-bold text-gray-900 mt-1">{count}</p>
           </div>
         </div>
         {trend && (

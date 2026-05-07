@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { BarChart3, CheckSquare, Plus, Users, LogOut, UserCheck, MessageSquare, Menu, X, User } from 'lucide-react'
+import { BarChart3, CheckSquare, Plus, Users, LogOut, UserCheck, MessageSquare, Menu, X, User, ClipboardList } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { NotificationBell } from '@/components/NotificationBell'
 import { ProfileDropdown } from '@/components/ProfileDropdown'
@@ -13,6 +13,7 @@ import dgLogo from '@/app/DGlogo.png'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { href: '/admin/tasks/status', label: 'Task Status', icon: ClipboardList },
   { href: '/admin/tasks/review', label: 'Review Queue', icon: CheckSquare },
   { href: '/admin/tasks/new', label: 'Task Creation', icon: Plus },
   { href: '/admin/user-approvals', label: 'User Approvals', icon: UserCheck },
