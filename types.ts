@@ -13,6 +13,12 @@ export interface Task {
   created_by?: string
 }
 
+export interface TaskWithProfile extends Task {
+  profiles: {
+    full_name: string
+  } | null
+}
+
 export interface Submission {
   id: string
   task_id: string

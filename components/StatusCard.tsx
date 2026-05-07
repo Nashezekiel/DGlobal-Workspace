@@ -13,16 +13,27 @@ interface StatusCardProps {
 }
 
 export const StatusCard = memo(function StatusCard({ icon: Icon, label, count, color, trend }: StatusCardProps) {
+  const colorMap: Record<string, { bg: string, text: string }> = {
+    blue: { bg: 'bg-blue-50', text: 'text-blue-600' },
+    green: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    yellow: { bg: 'bg-amber-50', text: 'text-amber-600' },
+    purple: { bg: 'bg-purple-50', text: 'text-purple-600' },
+    red: { bg: 'bg-red-50', text: 'text-red-600' },
+    gray: { bg: 'bg-gray-50', text: 'text-gray-600' },
+  }
+
+  const activeColor = colorMap[color] || colorMap.gray
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 pr-4 pl-2 hover:shadow-md transition-shadow duration-200 motion-safe:animate-fade-up">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 pr-4 pl-2 hover:shadow-md transition-all duration-200 motion-safe:animate-fade-up hover:-translate-y-0.5">
       <div className="flex items-center justify-start gap-4">
         <div className="flex items-center">
-          <div className={`flex-shrink-0 p-3 rounded-lg ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
-            <Icon className={`h-6 w-6 ${color}`} />
+          <div className={`flex-shrink-0 p-3 rounded-lg ${activeColor.bg}`}>
+            <Icon className={`h-6 w-6 ${activeColor.text}`} />
           </div>
           <div className="ml-2">
-            <p className="text-xs font-medium text-gray-600">{label}</p>
-            <p className="text-lg font-bold text-gray-900 mt-1">{count}</p>
+            <p className="text-xs font-medium text-gray-500">{label}</p>
+            <p className="text-lg font-bold text-gray-900 mt-0.5">{count}</p>
           </div>
         </div>
         {trend && (

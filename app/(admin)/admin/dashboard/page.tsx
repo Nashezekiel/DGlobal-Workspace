@@ -6,6 +6,7 @@ import { Users, CheckCircle, Clock, UserCheck, ArrowRight, Plus, ClipboardList, 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { TaskWithProfile } from '@/types'
 
 // Dynamic imports to defer loading of heavy components
 const StatusCard = dynamic(() => import('@/components/StatusCard').then(mod => ({ default: mod.StatusCard })), {
@@ -92,7 +93,7 @@ export default async function AdminDashboardPage() {
       tasks?: { title?: string } | null
     }>
 
-    const recentTasks = (recentTasksResult.data || []) as any[]
+    const recentTasks = (recentTasksResult.data || []) as TaskWithProfile[]
 
     return (
       <div className="space-y-8">
@@ -104,37 +105,37 @@ export default async function AdminDashboardPage() {
             icon={Users}
             label="Team Outreach"
             count={outreach}
-            color="border-blue-500"
+            color="blue"
           />
           <StatusCard
             icon={CheckCircle}
             label="Task Completions"
             count={completions}
-            color="border-green-500"
+            color="green"
           />
           <StatusCard
             icon={Clock}
             label="Pending Review"
             count={pending}
-            color="border-yellow-500"
+            color="yellow"
           />
           <StatusCard
             icon={UserCheck}
             label="Active Interns"
             count={active}
-            color="border-purple-500"
+            color="purple"
           />
           <StatusCard
             icon={CheckCircle}
             label="Completion Rate"
             count={completionRate}
-            color="border-green-500"
+            color="green"
           />
           <StatusCard
             icon={ShieldAlert}
             label="Pending Approvals"
             count={pendingApprovals}
-            color="border-red-500"
+            color="red"
           />
         </div>
 

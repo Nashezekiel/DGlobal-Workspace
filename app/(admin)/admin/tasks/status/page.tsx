@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ClipboardList, Filter } from 'lucide-react'
+import { TaskWithProfile } from '@/types'
 
 export default async function TaskStatusPage() {
   const supabase = createClient()
@@ -60,13 +61,13 @@ export default async function TaskStatusPage() {
             <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed">
               <div className="text-gray-400 text-4xl mb-4">📋</div>
               <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
-              <p className="text-gray-500">You haven't created any tasks yet.</p>
+              <p className="text-gray-500">You haven&apos;t created any tasks yet.</p>
             </div>
           ) : (
             <div>
               {/* Mobile Card View (visible on small screens only) */}
               <div className="md:hidden space-y-4">
-                {tasks.map((t: any) => (
+                {tasks.map((t: TaskWithProfile) => (
                   <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -139,7 +140,7 @@ export default async function TaskStatusPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {tasks.map((t: any) => (
+                    {tasks.map((t: TaskWithProfile) => (
                       <tr key={t.id} className="hover:bg-gray-50/50 transition-colors group">
                         <td className="py-4 pl-2">
                           <div className="font-medium text-gray-900 group-hover:text-brand-purple transition-colors">
