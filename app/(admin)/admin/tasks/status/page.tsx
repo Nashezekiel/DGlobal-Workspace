@@ -34,6 +34,13 @@ export default async function TaskStatusPage() {
     console.error('Task Status Page Error:', tasksError)
   }
 
+  const tasksTyped = (tasks || []) as unknown as TaskWithProfile[]
+
+  const getProfile = (profiles: { full_name: string } | { full_name: string }[] | null | undefined) => {
+    if (!profiles) return null
+    return Array.isArray(profiles) ? profiles[0] : profiles
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -67,7 +74,7 @@ export default async function TaskStatusPage() {
             <div>
               {/* Mobile Card View (visible on small screens only) */}
               <div className="md:hidden space-y-4">
-                {tasks.map((t: TaskWithProfile) => (
+                {tasksTyped.map((t: TaskWithProfile) => (
                   <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -93,9 +100,9 @@ export default async function TaskStatusPage() {
                         <div className="text-[10px] text-gray-400 uppercase font-semibold">Assignee</div>
                         <div className="flex items-center gap-2">
                           <div className="h-6 w-6 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center text-[10px] font-bold">
-                            {(t.profiles?.full_name || 'U').slice(0, 2).toUpperCase()}
+                            {(getProfile(t.profiles)?.full_name || 'U').slice(0, 2).toUpperCase()}
                           </div>
-                          <span className="text-xs text-gray-700 truncate">{t.profiles?.full_name || 'Unassigned'}</span>
+                          <span className="text-xs text-gray-700 truncate">{getProfile(t.profiles)?.full_name || 'Unassigned'}</span>
                         </div>
                       </div>
                       <div className="space-y-1">
@@ -140,7 +147,7 @@ export default async function TaskStatusPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {tasks.map((t: TaskWithProfile) => (
+                    {tasksTyped.map((t: TaskWithProfile) => (
                       <tr key={t.id} className="hover:bg-gray-50/50 transition-colors group">
                         <td className="py-4 pl-2">
                           <div className="font-medium text-gray-900 group-hover:text-brand-purple transition-colors">
@@ -155,10 +162,10 @@ export default async function TaskStatusPage() {
                         <td className="py-4">
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center text-xs font-bold ring-2 ring-white">
-                              {(t.profiles?.full_name || 'U').slice(0, 2).toUpperCase()}
+                              {(getProfile(t.profiles)?.full_name || 'U').slice(0, 2).toUpperCase()}
                             </div>
                             <span className="text-gray-700 font-medium">
-                              {t.profiles?.full_name || 'Unassigned'}
+                              {getProfile(t.profiles)?.full_name || 'Unassigned'}
                             </span>
                           </div>
                         </td>

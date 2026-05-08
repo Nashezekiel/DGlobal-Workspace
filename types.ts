@@ -1,7 +1,7 @@
 export interface Task {
   id: string
   title: string
-  description: string
+  description?: string
   status: 'pending' | 'in_progress' | 'completed' | 'under_review' | 'rejected'
   priority: 'low' | 'medium' | 'high'
   assigned_to?: string
@@ -16,7 +16,9 @@ export interface Task {
 export interface TaskWithProfile extends Task {
   profiles: {
     full_name: string
-  } | null
+  } | {
+    full_name: string
+  }[] | null
 }
 
 export interface Submission {

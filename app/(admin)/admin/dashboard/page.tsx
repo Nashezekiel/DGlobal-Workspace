@@ -93,7 +93,12 @@ export default async function AdminDashboardPage() {
       tasks?: { title?: string } | null
     }>
 
-    const recentTasks = (recentTasksResult.data || []) as TaskWithProfile[]
+    const recentTasks = (recentTasksResult.data || []) as unknown as TaskWithProfile[]
+
+    const getProfile = (profiles: { full_name: string } | { full_name: string }[] | null | undefined) => {
+      if (!profiles) return null
+      return Array.isArray(profiles) ? profiles[0] : profiles
+    }
 
     return (
       <div className="space-y-8">
@@ -272,9 +277,9 @@ export default async function AdminDashboardPage() {
                         <td className="py-4">
                           <div className="flex items-center gap-2">
                             <div className="h-7 w-7 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center text-[10px] font-bold">
-                              {(t.profiles?.full_name || 'U').slice(0, 2).toUpperCase()}
+                              {(getProfile(t.profiles)?.full_name || 'U').slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="text-gray-700">{t.profiles?.full_name || 'Unassigned'}</span>
+                            <span className="text-gray-700">{getProfile(t.profiles)?.full_name || 'Unassigned'}</span>
                           </div>
                         </td>
                         <td className="py-4">
