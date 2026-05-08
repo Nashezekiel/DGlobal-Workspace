@@ -76,19 +76,19 @@ export default async function UserApprovalsPage() {
               {pendingUsers.map((user: Pick<Profile, 'id' | 'email' | 'full_name' | 'role'> & { created_at?: string }) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-4"
                 >
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-start sm:items-center gap-4 min-w-0">
                     <div className="flex-shrink-0 h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
                       <User className="h-6 w-6 text-purple-600" />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{user.full_name}</h3>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Mail className="h-4 w-4" />
-                        <span>{user.email}</span>
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">{user.full_name}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-0.5">
+                        <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span className="truncate">{user.email}</span>
                       </div>
-                      <div className="flex items-center space-x-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
                         <Badge variant="secondary">{user.role}</Badge>
                         <span className="text-xs text-gray-500">
                           Applied {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
@@ -96,22 +96,23 @@ export default async function UserApprovalsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <form action={handleApprove.bind(null, user.id)}>
+                  <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0">
+                    <form action={handleApprove.bind(null, user.id)} className="flex-1 sm:flex-none">
                       <Button
                         type="submit"
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700"
+                        className="w-full bg-green-600 hover:bg-green-700"
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Approve
                       </Button>
                     </form>
-                    <form action={handleReject.bind(null, user.id)}>
+                    <form action={handleReject.bind(null, user.id)} className="flex-1 sm:flex-none">
                       <Button
                         type="submit"
                         size="sm"
                         variant="destructive"
+                        className="w-full"
                       >
                         <X className="h-4 w-4 mr-1" />
                         Reject

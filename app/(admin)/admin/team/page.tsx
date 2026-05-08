@@ -385,117 +385,80 @@ export default function TeamManagementPage() {
         </CardContent>
       </Card>
 
-      {/* ─── Assign Task Slide-In Panel ─── */}
-      {assignPanel.open && assignPanel.worker && (
-        <>
-          {/* backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm motion-safe:animate-fade-in"
-            onClick={closeAssignPanel}
-          />
+      {/* ─── Assign Task Dialog ─── */}
+      <Dialog
+        open={assignPanel.open}
+        onOpenChange={(open) => {
+          if (!open) closeAssignPanel()
+        }}
+      >
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden gap-0 [&>button]:hidden">
+          {assignPanel.worker && (
+            <div className="flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="bg-brand-purple px-6 py-5 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <WorkerAvatar worker={assignPanel.worker} size="md" />
+                  <div>
+                    <p className="text-xs text-white/70 uppercase tracking-wider font-medium">Assigning task to</p>
+                    <h2 className="text-white font-bold text-lg leading-tight">{assignPanel.worker.full_name}</h2>
+                    <p className="text-white/60 text-xs">{assignPanel.worker.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeAssignPanel}
+                  className="rounded-full p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="Close panel"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-          {/* panel */}
-          <aside className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-lg bg-white shadow-2xl flex flex-col motion-safe:animate-slide-in-right overflow-hidden">
-            {/* Header */}
-            <div className="bg-brand-purple px-6 py-5 flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <WorkerAvatar worker={assignPanel.worker} size="md" />
-                <div>
-                  <p className="text-xs text-white/70 uppercase tracking-wider font-medium">Assigning task to</p>
-                  <h2 className="text-white font-bold text-lg leading-tight">{assignPanel.worker.full_name}</h2>
-                  <p className="text-white/60 text-xs">{assignPanel.worker.email}</p>
+              {/* Worker stats bar */}
+              <div className="bg-brand-purple/5 border-b border-brand-purple/10 px-6 py-3 flex gap-6 flex-shrink-0">
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">Assigned</p>
+                  <p className="font-bold text-gray-900">{assignPanel.worker.tasksAssigned}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">Completed</p>
+                  <p className="font-bold text-green-700">{assignPanel.worker.tasksCompleted}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">Rate</p>
+                  <p className="font-bold text-brand-purple">{completionRate(assignPanel.worker)}%</p>
                 </div>
               </div>
-              <button
-                onClick={closeAssignPanel}
-                className="rounded-full p-2 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="Close panel"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
 
-            {/* Worker stats bar */}
-            <div className="bg-brand-purple/5 border-b border-brand-purple/10 px-6 py-3 flex gap-6 flex-shrink-0">
-              <div className="text-center">
-                <p className="text-xs text-gray-500">Assigned</p>
-                <p className="font-bold text-gray-900">{assignPanel.worker.tasksAssigned}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-gray-500">Completed</p>
-                <p className="font-bold text-green-700">{assignPanel.worker.tasksCompleted}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-gray-500">Rate</p>
-                <p className="font-bold text-brand-purple">{completionRate(assignPanel.worker)}%</p>
-              </div>
-            </div>
+              {/* Form */}
+              <div className="flex-1 overflow-y-auto px-6 py-6">
+                {assignStatus && (
+                  <div
+                    className={`mb-5 rounded-xl border px-4 py-3 text-sm flex items-center gap-2 ${
+                      assignStatus.type === 'success'
+                        ? 'border-green-200 bg-green-50 text-green-700'
+                        : 'border-red-200 bg-red-50 text-red-700'
+                    }`}
+                  >
+                    {assignStatus.type === 'success' && <CheckCircle2 className="h-4 w-4 flex-shrink-0" />}
+                    {assignStatus.text}
+                  </div>
+                )}
 
-            {/* Form */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-              {assignStatus && (
-                <div
-                  className={`mb-5 rounded-xl border px-4 py-3 text-sm flex items-center gap-2 ${
-                    assignStatus.type === 'success'
-                      ? 'border-green-200 bg-green-50 text-green-700'
-                      : 'border-red-200 bg-red-50 text-red-700'
-                  }`}
-                >
-                  {assignStatus.type === 'success' && <CheckCircle2 className="h-4 w-4 flex-shrink-0" />}
-                  {assignStatus.text}
-                </div>
-              )}
-
-              <Form {...taskForm}>
-                <form
-                  id="assign-task-form"
-                  onSubmit={taskForm.handleSubmit(handleAssignTask)}
-                  className="space-y-5"
-                >
-                  <FormField
-                    control={taskForm.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Task Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Write weekly progress report" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={taskForm.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe the expected outcome, steps, and deliverables."
-                            className="min-h-28 resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
+                <Form {...taskForm}>
+                  <form
+                    id="assign-task-form"
+                    onSubmit={taskForm.handleSubmit(handleAssignTask)}
+                    className="space-y-5"
+                  >
                     <FormField
                       control={taskForm.control}
-                      name="due_date"
+                      name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-1.5">
-                            <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
-                            Due Date
-                          </FormLabel>
+                          <FormLabel>Task Title</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input placeholder="e.g. Write weekly progress report" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -504,76 +467,113 @@ export default function TeamManagementPage() {
 
                     <FormField
                       control={taskForm.control}
-                      name="priority"
+                      name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-1.5">
-                            <Flag className="h-3.5 w-3.5 text-gray-500" />
-                            Priority
-                          </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select priority" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="low">
-                                <span className="flex items-center gap-1.5">
-                                  <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-                                  Low
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="medium">
-                                <span className="flex items-center gap-1.5">
-                                  <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" />
-                                  Medium
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="high">
-                                <span className="flex items-center gap-1.5">
-                                  <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
-                                  High
-                                </span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describe the expected outcome, steps, and deliverables."
+                              className="min-h-28 resize-none"
+                              {...field}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                </form>
-              </Form>
-            </div>
 
-            {/* Footer */}
-            <div className="flex-shrink-0 border-t bg-white px-6 py-4 flex gap-3">
-              <Button variant="outline" onClick={closeAssignPanel} className="flex-1">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                form="assign-task-form"
-                disabled={isAssigning}
-                className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white"
-              >
-                {isAssigning ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Assigning…
-                  </>
-                ) : (
-                  <>
-                    <ClipboardPlus className="h-4 w-4 mr-2" />
-                    Assign Task
-                  </>
-                )}
-              </Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={taskForm.control}
+                        name="due_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1.5">
+                              <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
+                              Due Date
+                            </FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={taskForm.control}
+                        name="priority"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1.5">
+                              <Flag className="h-3.5 w-3.5 text-gray-500" />
+                              Priority
+                            </FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select priority" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="low">
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+                                    Low
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="medium">
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" />
+                                    Medium
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="high">
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
+                                    High
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </form>
+                </Form>
+              </div>
+
+              {/* Footer */}
+              <div className="flex-shrink-0 border-t bg-gray-50 px-6 py-4 flex gap-3">
+                <Button type="button" variant="outline" onClick={closeAssignPanel} className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="assign-task-form"
+                  disabled={isAssigning}
+                  className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white"
+                >
+                  {isAssigning ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Assigning…
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardPlus className="h-4 w-4 mr-2" />
+                      Assign Task
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-          </aside>
-        </>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Quick Message Dialog ─── */}
       <Dialog
