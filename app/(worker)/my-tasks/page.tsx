@@ -235,7 +235,7 @@ export default function MyTasksPage() {
   const visibleTasks = tasks.filter(task => {
     if (search.trim()) {
       const term = search.toLowerCase()
-      if (!task.title.toLowerCase().includes(term) && !task.description.toLowerCase().includes(term)) return false
+      if (!task.title.toLowerCase().includes(term) && !(task.description || '').toLowerCase().includes(term)) return false
     }
     if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false
     return true

@@ -46,7 +46,7 @@ export function TaskEditDialog({ task, onTaskUpdated, trigger }: TaskEditDialogP
     try {
       const updatedTask: Partial<Task> = {
         title: formData.title.trim(),
-        description: formData.description.trim(),
+        description: (formData.description || '').trim(),
         priority: formData.priority,
         status: formData.status,
         due_date: formData.due_date || undefined,
