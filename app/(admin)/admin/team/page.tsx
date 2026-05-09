@@ -393,6 +393,7 @@ export default function TeamManagementPage() {
         }}
       >
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden gap-0 [&>button]:hidden">
+          <DialogTitle className="sr-only">Assign Task</DialogTitle>
           {assignPanel.worker && (
             <div className="flex flex-col max-h-[90vh]">
               {/* Header */}
