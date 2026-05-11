@@ -29,26 +29,27 @@ import {
 
 // Columns the worker is allowed to see and interact with
 const COLUMNS: { key: Task['status']; title: string; color: string; description: string }[] = [
-  { key: 'pending',      title: 'To Do',       color: 'bg-slate-100 border-slate-300',  description: 'Assigned tasks waiting to be started' },
-  { key: 'in_progress',  title: 'In Progress',  color: 'bg-blue-50 border-blue-200',     description: 'Tasks you are currently working on' },
-  { key: 'under_review', title: 'Review',       color: 'bg-amber-50 border-amber-200',   description: 'Submitted — awaiting admin approval' },
-  { key: 'rejected',     title: 'Rejected',     color: 'bg-red-50 border-red-200',       description: 'Needs revision based on admin feedback' },
-  { key: 'completed',    title: 'Done',         color: 'bg-green-50 border-green-200',   description: 'Approved and completed tasks' },
+  { key: 'pending', title: 'To Do', color: 'bg-slate-100 border-slate-300', description: 'Assigned tasks waiting to be started' },
+  { key: 'in_progress', title: 'In Progress', color: 'bg-blue-50 border-blue-200', description: 'Tasks you are currently working on' },
+  { key: 'under_review', title: 'Review', color: 'bg-amber-50 border-amber-200', description: 'Submitted — awaiting admin approval' },
+  { key: 'rejected', title: 'Rejected', color: 'bg-red-50 border-red-200', description: 'Needs revision based on admin feedback' },
+  { key: 'completed', title: 'Done', color: 'bg-green-50 border-green-200', description: 'Approved and completed tasks' },
 ]
 
 // Allowed drag transitions for workers
 const ALLOWED_TRANSITIONS: Partial<Record<Task['status'], Task['status'][]>> = {
-  pending:     ['in_progress'],
+  pending: ['in_progress'],
   in_progress: ['pending', 'under_review'],
-  rejected:    ['in_progress'],
+  rejected: ['in_progress'],
+  completed: ['achieved'],
 }
 
-function DroppableColumn({ 
-  id, 
-  column, 
-  colTasks, 
-  updateTaskStatus 
-}: { 
+function DroppableColumn({
+  id,
+  column,
+  colTasks,
+  updateTaskStatus
+}: {
   id: string
   column: typeof COLUMNS[number]
   colTasks: Task[]
@@ -60,14 +61,14 @@ function DroppableColumn({
     <div
       ref={setNodeRef}
       id={id}
-      className={`rounded-xl border-2 ${column.color} flex flex-col min-h-[200px]`}
+      className={`rounded-xl border-2 ${column.color} flex flex-col min-h-[200px] overflow-hidden`}
     >
-      <div className="p-3 border-b border-inherit">
+      <div className="p-2 border-b border-inherit bg-white/50">
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold text-sm text-gray-800">{column.title}</h3>
           <Badge variant="secondary" className="text-xs px-1.5 h-5">{colTasks.length}</Badge>
         </div>
-        <p className="text-[10px] text-gray-400">{column.description}</p>
+        <p className="text-[10px] text-gray-500 leading-tight">{column.description}</p>
       </div>
 
       <SortableContext
@@ -75,7 +76,7 @@ function DroppableColumn({
         items={colTasks.map(t => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-3 p-3 flex-1 min-h-[120px]">
+        <div className="flex flex-col gap-1.5 p-1.5 flex-1 min-h-[120px]">
           {colTasks.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <p className="text-xs text-gray-300">Drop here</p>
@@ -105,7 +106,7 @@ export default function MyTasksPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   )
 
   useEffect(() => {
@@ -128,11 +129,11 @@ export default function MyTasksPage() {
         .order('submitted_at', { ascending: false })
 
       const feedbackMap = new Map<string, string>()
-      ;(submissionsData || []).forEach((s: { task_id: string; admin_feedback: string | null }) => {
-        if (!feedbackMap.has(s.task_id) && s.admin_feedback) {
-          feedbackMap.set(s.task_id, s.admin_feedback)
-        }
-      })
+        ; (submissionsData || []).forEach((s: { task_id: string; admin_feedback: string | null }) => {
+          if (!feedbackMap.has(s.task_id) && s.admin_feedback) {
+            feedbackMap.set(s.task_id, s.admin_feedback)
+          }
+        })
 
       const hydrated = ((tasksData || []) as Task[]).map(task => {
         const feedback = feedbackMap.get(task.id)
@@ -155,31 +156,35 @@ export default function MyTasksPage() {
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', taskId)
 
-    if (!error) {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t))
+    if (error) {
+      console.error('Error updating task status:', error)
+      alert(`Failed to update task status: ${error.message || 'Unknown error'}.\n\nIf you are moving to Achieved, please make sure the Supabase "status" column constraint allows 'achieved'.`)
+      return
+    }
 
-      // Notify admin when task is submitted for review
-      if (status === 'under_review') {
-        const { data: { user } } = await supabase.auth.getUser()
-        const task = tasks.find(t => t.id === taskId)
-        if (user && task) {
-          const { data: admins } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('role', 'admin')
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t))
 
-          if (admins && admins.length > 0) {
-            await supabase.from('notifications').insert(
-              admins.map((admin: { id: string }) => ({
-                user_id: admin.id,
-                type: 'submission',
-                title: 'Task Submitted for Review',
-                message: `"${task.title}" has been submitted for your review.`,
-                link: '/admin/tasks/review',
-                is_read: false,
-              }))
-            )
-          }
+    // Notify admin when task is submitted for review
+    if (status === 'under_review') {
+      const { data: { user } } = await supabase.auth.getUser()
+      const task = tasks.find(t => t.id === taskId)
+      if (user && task) {
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'admin')
+
+        if (admins && admins.length > 0) {
+          await supabase.from('notifications').insert(
+            admins.map((admin: { id: string }) => ({
+              user_id: admin.id,
+              type: 'submission',
+              title: 'Task Submitted for Review',
+              message: `"${task.title}" has been submitted for your review.`,
+              link: '/admin/tasks/review',
+              is_read: false,
+            }))
+          )
         }
       }
     }
@@ -289,7 +294,7 @@ export default function MyTasksPage() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
             {COLUMNS.map(column => {
               const colTasks = visibleTasks.filter(t => t.status === column.key)
               return (

@@ -2,7 +2,7 @@ export interface Task {
   id: string
   title: string
   description?: string
-  status: 'pending' | 'in_progress' | 'completed' | 'under_review' | 'rejected'
+  status: 'pending' | 'in_progress' | 'completed' | 'under_review' | 'rejected' | 'achieved'
   priority: 'low' | 'medium' | 'high'
   assigned_to?: string
   assigned_role?: 'admin' | 'worker' | 'any'

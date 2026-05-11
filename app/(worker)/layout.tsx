@@ -4,7 +4,7 @@ import { useState, lazy, Suspense } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ClipboardList, MessageSquare, FileText, Bug, LogOut, Home, Bell, Menu, X, User } from 'lucide-react'
+import { ClipboardList, MessageSquare, FileText, Bug, LogOut, Home, Bell, Menu, X, User, Trophy } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import dgLogo from '@/app/DGlogo.png'
@@ -16,6 +16,7 @@ const GlobalSearch = lazy(() => import('@/components/GlobalSearch').then(m => ({
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/my-tasks', label: 'My Tasks', icon: ClipboardList },
+  { href: '/achieved', label: 'Achieved', icon: Trophy },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/reports', label: 'Reports', icon: FileText },
