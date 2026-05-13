@@ -19,6 +19,7 @@ interface TaskCardProps {
   onUpdateStatus?: (taskId: string, status: Task['status']) => void
   isWorkerView?: boolean
   isDragging?: boolean
+  isAdminView?: boolean
 }
 
 const PRIORITY_STYLES: Record<Task['priority'], string> = {
@@ -52,6 +53,7 @@ export const TaskCard = memo(function TaskCard({
   task,
   onUpdateStatus,
   isWorkerView = true,
+  isAdminView = false,
 }: TaskCardProps) {
   const [detailOpen, setDetailOpen] = useState(false)
 
@@ -177,20 +179,36 @@ export const TaskCard = memo(function TaskCard({
             </div>
           )}
 
-          {/* Clickable title + description area → opens detail dialog */}
-          <button
-            className="flex-1 min-w-0 text-left group/title"
-            onClick={() => setDetailOpen(true)}
-            title="Click to view full details"
-          >
-            <p className="font-semibold text-sm text-gray-900 leading-snug truncate group-hover/title:text-purple-700 transition-colors">
-              {task.title}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{task.description}</p>
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-300 group-hover/title:text-purple-400 mt-1 transition-colors">
-              View details <ChevronRight className="h-3 w-3" />
-            </span>
-          </button>
+          {/* Clickable title + description area → opens detail dialog or admin detail page */}
+          {isAdminView ? (
+            <a
+              href={`/admin/tasks/${task.id}`}
+              className="flex-1 min-w-0 text-left group/title block"
+              title="Click to view full admin details"
+            >
+              <p className="font-semibold text-sm text-gray-900 leading-snug truncate group-hover/title:text-purple-700 transition-colors">
+                {task.title}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{task.description}</p>
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-300 group-hover/title:text-purple-400 mt-1 transition-colors">
+                Admin Details <ChevronRight className="h-3 w-3" />
+              </span>
+            </a>
+          ) : (
+            <button
+              className="flex-1 min-w-0 text-left group/title"
+              onClick={() => setDetailOpen(true)}
+              title="Click to view full details"
+            >
+              <p className="font-semibold text-sm text-gray-900 leading-snug truncate group-hover/title:text-purple-700 transition-colors">
+                {task.title}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{task.description}</p>
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-300 group-hover/title:text-purple-400 mt-1 transition-colors">
+                View details <ChevronRight className="h-3 w-3" />
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Badges */}

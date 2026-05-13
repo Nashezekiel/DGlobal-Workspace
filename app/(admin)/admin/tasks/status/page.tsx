@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { PageHeader } from '@/components/PageHeader'
+import dynamic from 'next/dynamic'
+import { ClipboardList, Filter } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ClipboardList, Filter } from 'lucide-react'
 import { TaskWithProfile } from '@/types'
+
+// Dynamic imports for better performance
+const PageHeader = dynamic(() => import('@/components/PageHeader').then(mod => ({ default: mod.PageHeader })))
 
 export default async function TaskStatusPage() {
   const supabase = createClient()
@@ -77,8 +80,13 @@ export default async function TaskStatusPage() {
                 {tasksTyped.map((t: TaskWithProfile) => (
                   <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="font-semibold text-gray-900 line-clamp-2">{t.title}</div>
+                      <div className="min-w-0 flex-1">
+                        <a 
+                          href={`/admin/tasks/${t.id}`}
+                          className="font-semibold text-gray-900 line-clamp-2 block hover:text-brand-purple transition-colors"
+                        >
+                          {t.title}
+                        </a>
                         <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">ID: {t.id.slice(0, 8)}</div>
                       </div>
                       <Badge
@@ -150,9 +158,12 @@ export default async function TaskStatusPage() {
                     {tasksTyped.map((t: TaskWithProfile) => (
                       <tr key={t.id} className="hover:bg-gray-50/50 transition-colors group">
                         <td className="py-4 pl-2">
-                          <div className="font-medium text-gray-900 group-hover:text-brand-purple transition-colors">
+                          <a 
+                            href={`/admin/tasks/${t.id}`}
+                            className="font-medium text-gray-900 group-hover:text-brand-purple transition-colors block"
+                          >
                             {t.title}
-                          </div>
+                          </a>
                           <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                             <span>ID: {t.id.slice(0, 8)}</span>
                             <span>•</span>
