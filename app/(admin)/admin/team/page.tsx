@@ -158,7 +158,7 @@ export default function TeamManagementPage() {
   const fetchWorkers = async () => {
     setLoading(true)
     const [profilesResult, tasksResult] = await Promise.all([
-      supabase.from('profiles').select('*').eq('role', 'worker').order('full_name', { ascending: true }),
+      supabase.from('profiles').select('*').eq('role', 'worker').eq('approval_status', 'approved').order('full_name', { ascending: true }),
       supabase.from('tasks').select('assigned_to,assigned_role,status'),
     ])
 

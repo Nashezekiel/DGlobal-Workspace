@@ -13,6 +13,7 @@ import { Calendar, AlertCircle, Lock, GripVertical, PlayCircle, CheckCircle2, Ro
 import { memo, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { TaskSubmissionDialog } from '@/components/TaskSubmissionDialog'
 
 interface TaskCardProps {
   task: Task
@@ -250,14 +251,19 @@ export const TaskCard = memo(function TaskCard({
               </Button>
             )}
             {task.status === 'in_progress' && (
-              <Button
-                size="sm"
-                className="h-7 text-xs bg-brand-purple hover:bg-brand-purple/90 text-white flex-1"
-                onClick={() => onUpdateStatus(task.id, 'under_review')}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                Submit for Review
-              </Button>
+              <TaskSubmissionDialog
+                task={task}
+                onSubmitted={() => onUpdateStatus(task.id, 'under_review')}
+                trigger={
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs bg-brand-purple hover:bg-brand-purple/90 text-white flex-1"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                    Submit for Review
+                  </Button>
+                }
+              />
             )}
             {task.status === 'rejected' && (
               <Button

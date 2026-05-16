@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { BarChart3, CheckSquare, Plus, Users, LogOut, UserCheck, MessageSquare, Menu, X, User, ClipboardList } from 'lucide-react'
+import { BarChart3, CheckSquare, Plus, Users, LogOut, UserCheck, MessageSquare, Menu, X, User, ClipboardList, Archive } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { NotificationBell } from '@/components/NotificationBell'
 import { ProfileDropdown } from '@/components/ProfileDropdown'
@@ -16,6 +16,7 @@ const navItems = [
   { href: '/admin/tasks/status', label: 'Task Status', icon: ClipboardList },
   { href: '/admin/tasks/review', label: 'Review Queue', icon: CheckSquare },
   { href: '/admin/tasks/new', label: 'Task Creation', icon: Plus },
+  { href: '/admin/archived', label: 'Archived', icon: Archive },
   { href: '/admin/user-approvals', label: 'User Approvals', icon: UserCheck },
   { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
   { href: '/admin/team', label: 'Team Management', icon: Users },

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { User, Mail, MapPin, Calendar, Save, Shield, Bell, Camera } from 'lucide-react'
+import { User, Mail, MapPin, Calendar, Save, Shield, Bell, Camera, Fingerprint, Copy, Check } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<Profile | null>(null)
   const [avatarFile, setAvatarFile] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [copiedId, setCopiedId] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -337,6 +338,31 @@ export default function ProfilePage() {
                 <MapPin className="h-4 w-4 text-gray-500" />
                 <span className="text-gray-600">{user?.location || 'No location set'}</span>
               </div>
+              {user?.id && (
+                <div className="flex items-start gap-3 text-sm pt-2 border-t border-gray-100">
+                  <Fingerprint className="h-4 w-4 text-brand-purple mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-0.5 font-medium">Admin ID</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-mono tracking-wide">
+                        DGA-{user.id.slice(0, 8).toUpperCase()}
+                      </code>
+                      <button
+                        type="button"
+                        title="Copy Admin ID"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`DGA-${user!.id.slice(0, 8).toUpperCase()}`)
+                          setCopiedId(true)
+                          setTimeout(() => setCopiedId(false), 2000)
+                        }}
+                        className="p-1 rounded hover:bg-gray-100 transition-colors text-gray-400 hover:text-brand-purple"
+                      >
+                        {copiedId ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

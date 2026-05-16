@@ -31,7 +31,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowUpDown } from 'lucide-react'
+import { ArrowUpDown, Link as LinkIcon, ImageIcon, Eye } from 'lucide-react'
+
+function parseContent(content: string): { note?: string; link?: string; image?: string } {
+  try {
+    const parsed = JSON.parse(content)
+    if (typeof parsed === 'object' && parsed !== null) return parsed
+  } catch {
+    // plain text
+  }
+  return { note: content }
+}
 
 interface SubmissionWithDetails extends Submission {
   profiles: { full_name: string }
@@ -43,6 +53,10 @@ export default function ReviewQueuePage() {
   const [sortBy, setSortBy] = useState<'submitted_at' | 'status' | 'intern_name' | 'task_title'>('submitted_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [rejectDialog, setRejectDialog] = useState<{ open: boolean; submission: SubmissionWithDetails | null }>({
+    open: false,
+    submission: null,
+  })
+  const [viewDialog, setViewDialog] = useState<{ open: boolean; submission: SubmissionWithDetails | null }>({
     open: false,
     submission: null,
   })
@@ -224,11 +238,14 @@ export default function ReviewQueuePage() {
                 <TableHead>Task Title</TableHead>
                 <TableHead>Submission Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Proof</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedSubmissions.map(submission => (
+              {sortedSubmissions.map(submission => {
+                const proof = parseContent(submission.content || '')
+                return (
                 <TableRow
                   key={submission.id}
                   className={
@@ -241,6 +258,41 @@ export default function ReviewQueuePage() {
                   <TableCell>{new Date(submission.submitted_at).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <SubmissionBadge status={submission.status} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      {proof.link && (
+                        <a href={proof.link} target="_blank" rel="noopener noreferrer"
+                          title={proof.link}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-blue-500 hover:text-blue-700 transition-colors">
+                          <LinkIcon className="h-4 w-4" />
+                        </a>
+                      )}
+                      {proof.image && (
+                        <button
+                          type="button"
+                          title="View proof image"
+                          onClick={(e) => { e.stopPropagation(); setViewDialog({ open: true, submission }) }}
+                          className="text-green-500 hover:text-green-700 transition-colors"
+                        >
+                          <ImageIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                      {proof.note && !proof.link && !proof.image && (
+                        <button
+                          type="button"
+                          title="View submission notes"
+                          onClick={(e) => { e.stopPropagation(); setViewDialog({ open: true, submission }) }}
+                          className="text-gray-400 hover:text-gray-700 transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      )}
+                      {!proof.note && !proof.link && !proof.image && (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {submission.status === 'pending_review' && (
@@ -291,11 +343,60 @@ export default function ReviewQueuePage() {
                     )}
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Proof view dialog */}
+      <Dialog open={viewDialog.open} onOpenChange={(open) => setViewDialog({ open, submission: open ? viewDialog.submission : null })}>
+        <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base pr-6">
+              Submission Proof — {viewDialog.submission?.tasks?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {viewDialog.submission && (() => {
+            const proof = parseContent(viewDialog.submission.content || '')
+            return (
+              <div className="space-y-4">
+                <div className="text-sm text-gray-500">
+                  By <span className="font-medium text-gray-800">{viewDialog.submission.profiles?.full_name}</span>
+                  {' '}on {new Date(viewDialog.submission.submitted_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                </div>
+                {proof.note && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Notes</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{proof.note}</p>
+                  </div>
+                )}
+                {proof.link && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Proof Link</p>
+                    <a href={proof.link} target="_blank" rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline break-all flex items-center gap-1">
+                      <LinkIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                      {proof.link}
+                    </a>
+                  </div>
+                )}
+                {proof.image && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Proof Image</p>
+                    <img src={proof.image} alt="Submission proof"
+                      className="rounded-md border max-h-72 object-contain w-full" />
+                  </div>
+                )}
+                {!proof.note && !proof.link && !proof.image && (
+                  <p className="text-sm text-gray-400 italic">No proof content provided.</p>
+                )}
+              </div>
+            )
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

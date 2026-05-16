@@ -16,7 +16,7 @@ const GlobalSearch = lazy(() => import('@/components/GlobalSearch').then(m => ({
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/my-tasks', label: 'My Tasks', icon: ClipboardList },
-  { href: '/achieved', label: 'Achieved', icon: Trophy },
+  { href: '/achieved', label: 'Archived', icon: Trophy },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/reports', label: 'Reports', icon: FileText },
