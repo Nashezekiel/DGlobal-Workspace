@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { supabase } from '@/lib/supabase/client'
-import { Profile } from '@/types'
+
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -51,13 +51,14 @@ const formSchema = z.object({
   }
 })
 
+
 export default function TaskDetailPage() {
   const params = useParams()
   const router = useRouter()
   const taskId = params.id as string
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [task, setTask] = useState<any>(null)
-  const [workers, setWorkers] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -111,15 +112,7 @@ export default function TaskDetailPage() {
       return
     }
 
-    // Fetch workers for assignment
-    const { data: workersData } = await supabase
-      .from('profiles')
-      .select('id,email,full_name,role')
-      .eq('role', 'worker')
-      .order('full_name', { ascending: true })
-
     setTask(taskData)
-    setWorkers(workersData || [])
     
     if (taskData) {
       form.reset({
@@ -136,8 +129,6 @@ export default function TaskDetailPage() {
     setIsLoading(false)
   }
 
-  const assignmentType = form.watch('assign_type')
-  const selectedAssignees = form.watch('assigned_to') || []
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
@@ -207,7 +198,7 @@ export default function TaskDetailPage() {
       <div className="space-y-6">
         <PageHeader title="Task Not Found" subtitle="The requested task could not be found." />
         <div className="text-center py-20 text-gray-500">
-          <p>Task not found or you don't have permission to view it.</p>
+          <p>Task not found or you don&apos;t have permission to view it.</p>
         </div>
       </div>
     )
@@ -497,7 +488,8 @@ export default function TaskDetailPage() {
           <CardContent>
             {task.submissions && task.submissions.length > 0 ? (
               <div className="space-y-4">
-                {task.submissions.map((submission: any) => (
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {(task.submissions as any[]).map((submission: any) => (
                   <div key={submission.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

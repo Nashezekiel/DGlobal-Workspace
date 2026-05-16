@@ -73,7 +73,7 @@ export default function WorkerArchivedPage() {
         .order('updated_at', { ascending: false })
 
       const taskIds = (tasksData || []).map((t: Task) => t.id)
-      let submissionsMap: Record<string, { content: string; submitted_at: string }> = {}
+      const submissionsMap: Record<string, { content: string; submitted_at: string }> = {}
 
       if (taskIds.length > 0) {
         const { data: subsData } = await supabase
@@ -222,8 +222,8 @@ export default function WorkerArchivedPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
-                          {proof?.link && <LinkIcon className="h-4 w-4 text-blue-500" title="Has proof link" />}
-                          {proof?.image && <ImageIcon className="h-4 w-4 text-green-500" title="Has proof image" />}
+                          {proof?.link && <LinkIcon className="h-4 w-4 text-blue-500" />}
+                          {proof?.image && <ImageIcon className="h-4 w-4 text-green-500" />}
                           {!proof?.link && !proof?.image && <span className="text-xs text-gray-400">—</span>}
                         </div>
                       </TableCell>

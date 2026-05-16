@@ -78,7 +78,7 @@ export default function AdminArchivedPage() {
 
       // For each completed task, try to get most recent approved submission
       const taskIds = (tasksData || []).map((t: Task) => t.id)
-      let submissionsMap: Record<string, { content: string; submitted_at: string; worker_id: string }> = {}
+      const submissionsMap: Record<string, { content: string; submitted_at: string; worker_id: string }> = {}
 
       if (taskIds.length > 0) {
         const { data: subsData } = await supabase
@@ -281,12 +281,12 @@ export default function AdminArchivedPage() {
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           {proof?.link && (
-                            <span title="Has proof link">
+                            <span>
                               <LinkIcon className="h-4 w-4 text-blue-500" />
                             </span>
                           )}
                           {proof?.image && (
-                            <span title="Has proof image">
+                            <span>
                               <ImageIcon className="h-4 w-4 text-green-500" />
                             </span>
                           )}
