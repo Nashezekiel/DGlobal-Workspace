@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import React from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,7 +29,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CalendarClock, Flag, Sparkles, Users, ArrowLeft, Edit2, Trash2 } from 'lucide-react'
+import { CalendarClock, Flag, Sparkles, Users, ArrowLeft, Edit2, Trash2, Link as LinkIcon, Image as ImageIcon, FileText, ExternalLink, ChevronDown, ChevronUp, Paperclip } from 'lucide-react'
+import { ImageLightbox } from '@/components/ImageLightbox'
+
+// ─── Collapsible evidence block (used inside the Submissions card) ────────────
+function SubmissionEvidenceToggle({ content: raw }: { content: string }) {
+  const [open, setOpen] = React.useState(false)
+
+  let parsed: { note?: string; link?: string; image?: string } = {}
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    parsed = { note: raw }
+  }
+
+  const hasEvidence = parsed.note || parsed.link || parsed.image
+  if (!hasEvidence) return <p className="text-xs text-gray-400 italic">No evidence attached.</p>
+
+  const badges: string[] = []
+  if (parsed.note)  badges.push('Note')
+  if (parsed.link)  badges.push('Link')
+  if (parsed.image) badges.push('Image')
+
+  return (
+    <div className="rounded-lg border border-amber-200 overflow-hidden">
+      {/* Toggle button */}
+      <button
+        type="button"
+        onClick={() => setOpen(prev => !prev)}
+        className="w-full flex items-center gap-2 px-3 py-2 bg-amber-50 hover:bg-amber-100 transition-colors text-left"
+      >
+        <Paperclip className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+        <span className="text-xs font-semibold text-amber-700 flex-1">View Evidence</span>
+        <span className="flex items-center gap-1">
+          {badges.map(b => (
+            <span key={b} className="text-[10px] bg-amber-200 text-amber-800 rounded-full px-1.5 py-0 font-medium">
+              {b}
+            </span>
+          ))}
+        </span>
+        {open
+          ? <ChevronUp   className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+          : <ChevronDown className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />}
+      </button>
+
+      {/* Collapsible body */}
+      {open && (
+        <div className="bg-amber-50 border-t border-amber-100 p-3 space-y-2">
+          {parsed.note && (
+            <div className="flex gap-2 bg-white border border-amber-100 rounded p-3">
+              <FileText className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{parsed.note}</p>
+            </div>
+          )}
+          {parsed.link && (
+            <a
+              href={parsed.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-blue-700 hover:text-blue-900 bg-white border border-blue-100 hover:border-blue-300 rounded px-3 py-2 transition-colors group"
+            >
+              <LinkIcon className="h-4 w-4 flex-shrink-0 text-blue-500" />
+              <span className="truncate flex-1 text-xs">{parsed.link}</span>
+              <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" />
+            </a>
+          )}
+          {parsed.image && (
+            <div className="rounded border border-amber-100 overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border-b border-amber-100">
+                <ImageIcon className="h-3.5 w-3.5 text-green-600" />
+                <span className="text-xs text-gray-500">Proof Image — click to enlarge</span>
+              </div>
+              <ImageLightbox src={parsed.image} alt="Proof submitted by worker" />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const formSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters'),
@@ -507,9 +586,7 @@ export default function TaskDetailPage() {
                       </span>
                     </div>
                     
-                    <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                      {submission.content}
-                    </div>
+                    <SubmissionEvidenceToggle content={submission.content} />
 
                     {submission.admin_feedback && (
                       <div className="bg-blue-50 border border-blue-200 p-3 rounded">

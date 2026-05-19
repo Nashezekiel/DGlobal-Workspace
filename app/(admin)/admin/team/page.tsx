@@ -141,6 +141,12 @@ export default function TeamManagementPage() {
   const [isAssigning, setIsAssigning] = useState(false)
   const [assignStatus, setAssignStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+  // Profile dialog state
+  const [profileDialog, setProfileDialog] = useState<{ open: boolean; worker: WorkerStats | null }>({
+    open: false,
+    worker: null,
+  })
+
   const taskForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -297,10 +303,15 @@ export default function TeamManagementPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="min-w-[800px]">
+              <Table className="min-w-[1000px]">
                 <TableHeader>
                   <TableRow className="bg-gray-50/70">
-                    <TableHead className="pl-6">Member</TableHead>
+                    {/* ── Sticky: avatar + first name ─────────────────────── */}
+                    <TableHead className="pl-6 sticky left-0 z-20 bg-gray-50/95 after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-gray-200 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+                      Member
+                    </TableHead>
+                    {/* ── Scrollable columns ──────────────────────────────── */}
+                    <TableHead className="whitespace-nowrap">Member ID</TableHead>
                     <TableHead>Role/Track</TableHead>
                     <TableHead>Tasks Assigned</TableHead>
                     <TableHead>Completed</TableHead>
@@ -316,17 +327,36 @@ export default function TeamManagementPage() {
                       className="cursor-pointer hover:bg-brand-purple/5 transition-colors group"
                       onClick={() => openAssignPanel(worker)}
                     >
-                      <TableCell className="pl-6 py-4">
-                        <div className="flex items-center gap-3">
+                      {/* ── Sticky cell: entire area opens profile dialog ─── */}
+                      <TableCell className="pl-0 py-0 sticky left-0 z-10 bg-white group-hover:bg-purple-50 transition-colors shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+                        <button
+                          className="flex items-center gap-3 pl-6 py-4 w-full text-left hover:bg-purple-50/60 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setProfileDialog({ open: true, worker })
+                          }}
+                          title="View profile"
+                        >
                           <WorkerAvatar worker={worker} size="md" />
                           <div className="min-w-0">
-                            <div className="font-semibold text-gray-900 group-hover:text-brand-purple transition-colors truncate">
-                              {worker.full_name}
+                            <div className="font-semibold text-gray-900 group-hover:text-brand-purple transition-colors whitespace-nowrap">
+                              {worker.full_name.split(' ')[0]}
                             </div>
-                            <div className="text-xs text-gray-500 truncate">{worker.email}</div>
+                            <div className="text-xs text-gray-400 whitespace-nowrap">{worker.email.split('@')[0]}</div>
                           </div>
-                        </div>
+                        </button>
                       </TableCell>
+
+                      {/* ── Member ID ─────────────────────────────────────── */}
+                      <TableCell>
+                        <span
+                          className="font-mono text-[11px] bg-gray-100 text-gray-500 px-2 py-1 rounded tracking-wide select-all cursor-text"
+                          title={worker.id}
+                        >
+                          {worker.id.slice(0, 8).toUpperCase()}
+                        </span>
+                      </TableCell>
+
                       <TableCell>
                         <span className="text-sm text-gray-700">{worker.job_role || 'Intern'}</span>
                       </TableCell>
@@ -384,6 +414,133 @@ export default function TeamManagementPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ─── Profile Details Dialog ─── */}
+      <Dialog
+        open={profileDialog.open}
+        onOpenChange={(open) => setProfileDialog({ open, worker: open ? profileDialog.worker : null })}
+      >
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden gap-0">
+          <DialogTitle className="sr-only">Worker Profile</DialogTitle>
+          {profileDialog.worker && (() => {
+            const w = profileDialog.worker
+            const rate = completionRate(w)
+            return (
+              <div className="flex flex-col">
+                {/* Banner + avatar */}
+                <div className="bg-gradient-to-br from-brand-purple to-purple-700 px-6 pt-8 pb-14 relative">
+                  <button
+                    onClick={() => setProfileDialog({ open: false, worker: null })}
+                    className="absolute top-4 right-4 rounded-full p-1.5 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="flex flex-col items-center text-center gap-3">
+                    <WorkerAvatar worker={w} size="lg" />
+                    <div>
+                      <h2 className="text-white font-bold text-xl leading-tight">{w.full_name}</h2>
+                      <p className="text-white/60 text-sm mt-0.5">{w.job_role || 'Intern'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats strip */}
+                <div className="-mt-6 mx-6 bg-white rounded-xl shadow-md border border-gray-100 flex divide-x divide-gray-100">
+                  <div className="flex-1 text-center py-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Assigned</p>
+                    <p className="font-bold text-gray-900 text-lg">{w.tasksAssigned}</p>
+                  </div>
+                  <div className="flex-1 text-center py-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Completed</p>
+                    <p className="font-bold text-green-600 text-lg">{w.tasksCompleted}</p>
+                  </div>
+                  <div className="flex-1 text-center py-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Rate</p>
+                    <p className="font-bold text-brand-purple text-lg">{rate}%</p>
+                  </div>
+                </div>
+
+                {/* Profile details */}
+                <div className="px-6 py-5 space-y-3">
+                  {/* Email */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-[10px] uppercase tracking-wide text-gray-400 w-20 pt-0.5 flex-shrink-0">Email</span>
+                    <span className="text-sm text-gray-800 break-all">{w.email}</span>
+                  </div>
+
+                  {/* Member ID */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-[10px] uppercase tracking-wide text-gray-400 w-20 pt-0.5 flex-shrink-0">Member ID</span>
+                    <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded select-all" title={w.id}>
+                      {w.id.slice(0, 16).toUpperCase()}…
+                    </span>
+                  </div>
+
+                  {/* Phone */}
+                  {w.phone && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-[10px] uppercase tracking-wide text-gray-400 w-20 pt-0.5 flex-shrink-0">Phone</span>
+                      <span className="text-sm text-gray-800">{w.phone}</span>
+                    </div>
+                  )}
+
+                  {/* Location */}
+                  {w.location && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-[10px] uppercase tracking-wide text-gray-400 w-20 pt-0.5 flex-shrink-0">Location</span>
+                      <span className="text-sm text-gray-800">{w.location}</span>
+                    </div>
+                  )}
+
+                  {/* Bio */}
+                  {w.bio && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-[10px] uppercase tracking-wide text-gray-400 w-20 pt-0.5 flex-shrink-0">Bio</span>
+                      <span className="text-sm text-gray-700 leading-relaxed">{w.bio}</span>
+                    </div>
+                  )}
+
+                  {/* Joined */}
+                  {w.created_at && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-[10px] uppercase tracking-wide text-gray-400 w-20 pt-0.5 flex-shrink-0">Joined</span>
+                      <span className="text-sm text-gray-800">
+                        {new Date(w.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="px-6 pb-6 flex gap-3">
+                  <Button
+                    className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white gap-2"
+                    onClick={() => {
+                      setProfileDialog({ open: false, worker: null })
+                      openAssignPanel(w)
+                    }}
+                  >
+                    <ClipboardPlus className="h-4 w-4" />
+                    Assign Task
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2"
+                    onClick={() => {
+                      setProfileDialog({ open: false, worker: null })
+                      setMessageDialog({ open: true, worker: w })
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Message
+                  </Button>
+                </div>
+              </div>
+            )
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Assign Task Dialog ─── */}
       <Dialog
