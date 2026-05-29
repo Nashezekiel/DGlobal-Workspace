@@ -201,29 +201,33 @@ export default function MyTasksPage() {
     const originalTask = activeTask
     setActiveTask(null)
     const { active, over } = event
-    if (!over || active.id === over.id) return
 
     const taskId = active.id as string
     if (!originalTask) return
 
-    // over.id could be a column key or another task id
-    const targetStatus = COLUMNS.find(c => c.key === over.id)?.key
-      ?? tasks.find(t => t.id === over.id)?.status
+    // If over is null, the drag was cancelled or dropped outside, so we revert any optimistic update
+    if (!over) {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: originalTask.status } : t))
+      return
+    }
 
-    if (!targetStatus || targetStatus === originalTask.status) return
+    // Find the task's current status in the UI (which includes any optimistic updates from handleDragOver)
+    const currentUiTask = tasks.find(t => t.id === taskId)
+    const currentUiStatus = currentUiTask?.status ?? originalTask.status
 
-    // Enforce worker transition rules
-    const allowed = ALLOWED_TRANSITIONS[originalTask.status]
-    if (!allowed?.includes(targetStatus)) return
+    // If the status didn't change from the original, we don't need to do anything
+    if (currentUiStatus === originalTask.status) return
 
-    if (targetStatus === 'under_review') {
+    // If it was moved to 'under_review', we must intercept it
+    if (currentUiStatus === 'under_review') {
       // Revert local optimistic status back to 'in_progress' so the card returns to its column
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'in_progress' } : t))
       setSubmittingTask(originalTask)
       return
     }
 
-    updateTaskStatus(taskId, targetStatus)
+    // Otherwise, persist the new status to the database
+    updateTaskStatus(taskId, currentUiStatus)
   }
 
   const handleDragOver = (event: DragOverEvent) => {
