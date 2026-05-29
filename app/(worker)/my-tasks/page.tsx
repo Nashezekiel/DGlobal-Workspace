@@ -198,28 +198,28 @@ export default function MyTasksPage() {
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const originalTask = activeTask
     setActiveTask(null)
     const { active, over } = event
     if (!over || active.id === over.id) return
 
     const taskId = active.id as string
-    const task = tasks.find(t => t.id === taskId)
-    if (!task) return
+    if (!originalTask) return
 
     // over.id could be a column key or another task id
     const targetStatus = COLUMNS.find(c => c.key === over.id)?.key
       ?? tasks.find(t => t.id === over.id)?.status
 
-    if (!targetStatus || targetStatus === task.status) return
+    if (!targetStatus || targetStatus === originalTask.status) return
 
     // Enforce worker transition rules
-    const allowed = ALLOWED_TRANSITIONS[task.status]
+    const allowed = ALLOWED_TRANSITIONS[originalTask.status]
     if (!allowed?.includes(targetStatus)) return
 
     if (targetStatus === 'under_review') {
       // Revert local optimistic status back to 'in_progress' so the card returns to its column
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'in_progress' } : t))
-      setSubmittingTask(task)
+      setSubmittingTask(originalTask)
       return
     }
 
