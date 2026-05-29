@@ -187,11 +187,18 @@ export default function AdminTaskReviewPage() {
       let feedback = null
 
       if (status === 'rejected') {
-        const reason = window.prompt(
-          'Please provide feedback on why this task is being rejected:'
-        )
-        if (reason === null) return // Admin cancelled
-        feedback = reason.trim() || 'No feedback provided.'
+        let reason = ''
+        while (reason.trim() === '') {
+          const promptVal = window.prompt(
+            'Please provide feedback on why this task is being rejected (required):'
+          )
+          if (promptVal === null) return // Admin cancelled
+          reason = promptVal.trim()
+          if (reason === '') {
+            alert('A rejection feedback note is required to reject the task.')
+          }
+        }
+        feedback = reason
       }
 
       // 1. Update the task status
