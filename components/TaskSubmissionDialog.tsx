@@ -1,74 +1,56 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Task } from '@/types'
-import { Send, FileText, CheckCircle, Link as LinkIcon, ImageIcon, X } from 'lucide-react'
+import { Send, FileText, CheckCircle, Link as LinkIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 
 interface TaskSubmissionDialogProps {
   task: Task
   onSubmitted?: () => void
   trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmissionDialogProps) {
-  const [open, setOpen] = useState(false)
+export function TaskSubmissionDialog({
+  task,
+  onSubmitted,
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: TaskSubmissionDialogProps) {
+  const [localOpen, setLocalOpen] = useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : localOpen
+  const setOpen = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setLocalOpen
+
   const [isLoading, setIsLoading] = useState(false)
   const [note, setNote] = useState('')
   const [proofLink, setProofLink] = useState('')
-  const [proofImage, setProofImage] = useState<string | null>(null)
-  const [proofImageName, setProofImageName] = useState('')
   const [error, setError] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be under 5MB')
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const img = new window.Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        const MAX = 1200
-        const scale = Math.min(MAX / img.width, MAX / img.height, 1)
-        canvas.width = img.width * scale
-        canvas.height = img.height * scale
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-          setProofImage(canvas.toDataURL('image/jpeg', 0.82))
-          setProofImageName(file.name)
-          setError('')
-        }
-      }
-      img.src = event.target?.result as string
-    }
-    reader.readAsDataURL(file)
+  const countWords = (text: string) => {
+    return text.trim().split(/\s+/).filter(Boolean).length
   }
 
-  const removeImage = () => {
-    setProofImage(null)
-    setProofImageName('')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const isValid = note.trim() || proofLink.trim() || proofImage
+  const wordCount = countWords(note)
+  const isNoteValid = wordCount >= 5
+  const isLinkValid = proofLink.trim().length > 0
+  const isValid = isNoteValid && isLinkValid
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValid) {
-      setError('Please provide at least a note, a proof link, or an image.')
+    if (!isLinkValid) {
+      setError('Please provide a valid proof link.')
+      return
+    }
+    if (!isNoteValid) {
+      setError('Your submission note must be at least 5 words long.')
       return
     }
 
@@ -84,9 +66,8 @@ export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmiss
 
       // Build structured content — backward-compatible JSON
       const contentPayload = JSON.stringify({
-        note: note.trim() || undefined,
-        link: proofLink.trim() || undefined,
-        image: proofImage || undefined,
+        note: note.trim(),
+        link: proofLink.trim(),
       })
 
       await supabase.from('submissions').insert({
@@ -105,8 +86,6 @@ export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmiss
       // Reset form
       setNote('')
       setProofLink('')
-      setProofImage(null)
-      setProofImageName('')
       setOpen(false)
       onSubmitted?.()
     } catch (err) {
@@ -144,23 +123,29 @@ export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmiss
 
           {/* Notes / description */}
           <div className="space-y-2">
-            <Label htmlFor="note">
-              Submission Notes <span className="text-gray-400 text-xs font-normal">(optional)</span>
-            </Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="note" className="text-gray-900 font-semibold">
+                Submission Notes <span className="text-red-500">*</span>
+              </Label>
+              <span className={`text-xs ${isNoteValid ? 'text-green-600 font-medium' : 'text-amber-600'}`}>
+                {wordCount === 0 ? '5 words minimum' : `${wordCount} words (minimum 5)`}
+              </span>
+            </div>
             <Textarea
               id="note"
               placeholder="Describe what you completed, any challenges faced, or additional context..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={4}
+              required
             />
           </div>
 
           {/* Proof link */}
           <div className="space-y-2">
-            <Label htmlFor="proof-link" className="flex items-center gap-1.5">
+            <Label htmlFor="proof-link" className="flex items-center gap-1.5 text-gray-900 font-semibold">
               <LinkIcon className="h-3.5 w-3.5 text-blue-500" />
-              Proof Link <span className="text-gray-400 text-xs font-normal">(optional)</span>
+              Proof Link <span className="text-red-500">*</span>
             </Label>
             <Input
               id="proof-link"
@@ -168,55 +153,11 @@ export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmiss
               placeholder="https://drive.google.com/... or any relevant URL"
               value={proofLink}
               onChange={(e) => setProofLink(e.target.value)}
+              required
             />
             <p className="text-xs text-gray-400">
               Link to a Google Drive file, Figma design, GitHub PR, live site, etc.
             </p>
-          </div>
-
-          {/* Proof image */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1.5">
-              <ImageIcon className="h-3.5 w-3.5 text-green-500" />
-              Proof Image <span className="text-gray-400 text-xs font-normal">(optional, max 5MB)</span>
-            </Label>
-            {proofImage ? (
-              <div className="relative rounded-lg border border-gray-200 overflow-hidden">
-                <img
-                  src={proofImage}
-                  alt="Proof preview"
-                  className="w-full max-h-48 object-contain bg-gray-50"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1 shadow text-gray-600 hover:text-red-500 transition-colors"
-                  title="Remove image"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <div className="px-3 py-1.5 bg-gray-50 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 truncate">{proofImageName}</p>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-brand-purple/40 hover:bg-purple-50/30 transition-colors cursor-pointer"
-              >
-                <ImageIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Click to upload a screenshot or image</p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
-              </button>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
           </div>
 
           {error && (
@@ -232,8 +173,8 @@ export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmiss
               <div className="text-sm text-blue-800">
                 <p className="font-medium">Submission Guidelines:</p>
                 <ul className="list-disc list-inside mt-1 space-y-1 text-blue-700">
-                  <li>At least one of: notes, link, or image is required</li>
-                  <li>Attach a screenshot or link as proof of completion</li>
+                  <li>Both submission notes and a proof link are required</li>
+                  <li>Submission notes must be at least 5 words long</li>
                   <li>An admin will review your submission before marking it archived</li>
                 </ul>
               </div>
@@ -258,3 +199,4 @@ export function TaskSubmissionDialog({ task, onSubmitted, trigger }: TaskSubmiss
     </Dialog>
   )
 }
+

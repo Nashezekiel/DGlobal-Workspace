@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Task } from '@/types'
 import { TaskCard } from '@/components/TaskCard'
+import { TaskSubmissionDialog } from '@/components/TaskSubmissionDialog'
 import { PageHeader } from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -103,6 +104,7 @@ export default function MyTasksPage() {
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all')
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [submittingTask, setSubmittingTask] = useState<Task | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -214,6 +216,13 @@ export default function MyTasksPage() {
     const allowed = ALLOWED_TRANSITIONS[task.status]
     if (!allowed?.includes(targetStatus)) return
 
+    if (targetStatus === 'under_review') {
+      // Revert local optimistic status back to 'in_progress' so the card returns to its column
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'in_progress' } : t))
+      setSubmittingTask(task)
+      return
+    }
+
     updateTaskStatus(taskId, targetStatus)
   }
 
@@ -318,6 +327,20 @@ export default function MyTasksPage() {
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {submittingTask && (
+        <TaskSubmissionDialog
+          task={submittingTask}
+          open={!!submittingTask}
+          onOpenChange={(open) => {
+            if (!open) setSubmittingTask(null)
+          }}
+          onSubmitted={() => {
+            updateTaskStatus(submittingTask.id, 'under_review')
+            setSubmittingTask(null)
+          }}
+        />
       )}
     </div>
   )
