@@ -1,18 +1,79 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, ChevronDown, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import dgLogo from '@/app/DGlogo.png'
 
 /* ─── Role options ──────────────────────────────────────────────────── */
 const JOB_ROLES = [
-  { value: 'intern', label: 'Full-Stack Developer Intern' },
-  { value: 'uiux', label: 'UI/UX Design Specialist' },
-  { value: 'instructor', label: 'Technical LMS Platform Instructor' },
+  { value: 'intern', label: 'Intern' },
+  { value: 'team_member', label: 'Team Member' },
+  { value: 'worker', label: 'Worker' },
 ]
+
+/* ─── Custom themed role dropdown ───────────────────────────────────── */
+function RoleDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const selected = JOB_ROLES.find(r => r.value === value)
+
+  return (
+    <div ref={ref} className="relative w-full" id="reg-role">
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={`input-glass w-full h-12 px-4 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 text-left focus:outline-none ${
+          open ? 'border-dggYellow shadow-[0_0_0_1px_#F2B42C44]' : ''
+        }`}
+      >
+        <span className={selected ? 'text-white' : 'text-white/38'}>
+          {selected ? selected.label : 'Select your role...'}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`flex-shrink-0 text-white/50 transition-transform duration-200 ${open ? 'rotate-180 text-dggYellow' : ''}`}
+        />
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div className="absolute z-50 top-[calc(100%+6px)] left-0 w-full rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.7)] border border-white/10"
+          style={{ background: 'rgba(13,6,20,0.97)', backdropFilter: 'blur(20px)' }}
+        >
+          {JOB_ROLES.map(role => (
+            <button
+              key={role.value}
+              type="button"
+              onClick={() => { onChange(role.value); setOpen(false) }}
+              className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold transition-colors text-left ${
+                value === role.value
+                  ? 'bg-dggYellow/15 text-dggYellow'
+                  : 'text-white/80 hover:bg-white/8 hover:text-white'
+              }`}
+            >
+              {role.label}
+              {value === role.value && <Check size={12} className="text-dggYellow flex-shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 /* ─── Live clock (copied pattern from login) ─────────────────────────── */
 function useLiveClock() {
@@ -297,17 +358,7 @@ export default function SignupPage() {
                 {step === 3 && (
                   <div className="text-left">
                     <FieldLabel>Select Your Workspace Role *</FieldLabel>
-                    <select
-                      id="reg-role"
-                      value={jobRole}
-                      onChange={e => setJobRole(e.target.value)}
-                      className="input-glass w-full h-12 px-4 rounded-xl text-xs font-semibold cursor-pointer"
-                    >
-                      <option value="" disabled>Select your role...</option>
-                      {JOB_ROLES.map(r => (
-                        <option key={r.value} value={r.value}>{r.label}</option>
-                      ))}
-                    </select>
+                    <RoleDropdown value={jobRole} onChange={setJobRole} />
                   </div>
                 )}
 
