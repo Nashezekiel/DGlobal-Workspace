@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DGG Workspace - Terminal Gateway Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dggPurple: '#512D7C',
+                        dggYellow: '#F2B42C',
+                        dggDark: '#07020d'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono-tech { font-family: 'Space Grotesk', monospace; }
+        
+        /* 🔥 High-Fidelity Deep Frost Transparent Glassmorphism Matrix */
+        .glass-card-transparent {
+            background: rgba(13, 6, 20, 0.65) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        
+        .inner-input-glass {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff !important;
+        }
+        .inner-input-glass::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ⌨️ Typewriter Animation Loop Engine */
+        @keyframes typewrite {
+            0%, 100% { width: 0; }
+            50%, 90% { width: 100%; }
+        }
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+        .typewriter-text {
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 2px solid #F2B42C;
+            animation: typewrite 5s steps(25) infinite, blink 0.5s step-end infinite;
+        }
+
+        /* ⚡ Enhanced Centered Window Entry Animations */
+        @keyframes centeredModalZoomIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-zoom-engine {
+            animation: centeredModalZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        
+        .step-slide { display: none; }
+        .step-slide.active { display: block; animation: fadeInView 0.4s ease-out forwards; }
+        @keyframes fadeInView {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-dggDark text-white overflow-y-auto lg:overflow-hidden flex items-center justify-center relative p-4 pb-32 pt-28 lg:py-4 selection:bg-dggYellow selection:text-dggPurple">
+
+    <!-- 🎥 1. FULL-SCREEN BACKGROUND VIDEO MATRIX -->
+    <div class="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+        <div class="absolute inset-0 bg-gradient-to-br from-dggDark via-dggDark/60 to-transparent z-10"></div>
+        <video 
+            id="workspaceBgVideo"
+            autoplay
+            muted 
+            playsinline 
+            webkit-playsinline
+            preload="auto"
+            class="w-full h-full object-cover opacity-0 transition-opacity duration-700 ease-in-out"
+            src="workspace-video.mp4"
+        ></video>
+    </div>
+
+    <!-- 🌤️ 2. TOP HUD LAYER: METRICS, CLOCK & CALENDAR -->
+    <header class="absolute top-0 inset-x-0 z-20 p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-3 pointer-events-none w-full">
+        <div class="bg-black/50 border border-white/10 px-4 py-2 rounded-2xl backdrop-blur-md flex items-center h-8 pointer-events-auto">
+            <span class="text-[10px] font-mono-tech font-bold text-white tracking-widest uppercase flex items-center">
+                <span class="typewriter-text">DGG-WorkSpace Ecosystem...</span>
+            </span>
+        </div>
+
+        <div class="flex items-center justify-center gap-2 sm:gap-3 pointer-events-auto w-full md:w-auto">
+            <div class="bg-black/50 border border-white/10 px-3 sm:px-4 py-1.5 rounded-xl backdrop-blur-md text-left">
+                <p class="text-[9px] font-black tracking-wider text-dggYellow uppercase leading-none">Lagos, NG</p>
+                <p class="text-[9px] font-mono-tech text-white/50 mt-1">29°C · Scattered</p>
+            </div>
+            <div class="bg-black/50 border border-white/10 px-3 sm:px-4 py-1.5 rounded-xl backdrop-blur-md flex flex-col justify-center text-right min-w-[125px] sm:min-w-[140px] h-[38px]">
+                <span id="liveClockDisplay" class="text-[11px] sm:text-xs font-mono-tech font-bold text-white tracking-wide leading-none">00:00:00 WAT</span>
+                <span id="liveCalendarDisplay" class="text-[8px] font-bold text-white/40 tracking-widest uppercase mt-1 leading-none">May 30, 2026</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 💳 3. FLOATING MAIN AUTHENTICATION INTERFACE CARD -->
+    <main id="rootLandingPanel" class="w-full max-w-[450px] z-20 transition-all duration-300 my-auto">
+        
+        <div class="text-center mb-5">
+            <div class="w-12 h-12 bg-white/95 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-3 border border-white/20">
+                <span class="text-dggPurple text-xl font-black font-mono-tech">D</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-none">
+                Welcome to DGG-Workspace
+            </h1>
+            <p id="gatewaySubtitle" class="text-xs text-white/60 mt-2">
+                Sign in to access your workspace
+            </p>
+        </div>
+
+        <div class="glass-card-transparent rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-[0_40px_80px_rgba(0,0,0,0.6)] relative mx-auto">
+            
+            <div id="authSuccessView" class="hidden text-center py-10">
+                <span class="text-4xl block animate-bounce">🔓</span>
+                <h3 class="text-lg font-black text-dggYellow uppercase tracking-widest mt-4">Access Cleared</h3>
+                <p class="text-xs text-white/50 font-mono-tech mt-1">Deploying platform workspace elements...</p>
+            </div>
+
+            <div id="cardContentEngine">
+                <div id="progressBarContainer" class="hidden w-full h-1 bg-white/10 rounded-full mb-5 overflow-hidden">
+                    <div id="activeProgressFill" class="w-1/4 h-full bg-dggYellow transition-all duration-300"></div>
+                </div>
+
+                <form id="wizardMultiStepForm" onsubmit="handleFormSubmission(event)">
+                    
+                    <!-- SIGN IN PANEL LAYOUT VIEW -->
+                    <div id="loginViewSegment" class="space-y-4">
+                        <div class="text-left">
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1.5 pl-1">Email Address</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">✉️</span>
+                                <input id="loginEmail" type="email" required placeholder="Enter email" class="w-full h-12 pl-10 pr-4 py-2 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-dggYellow transition-all" />
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1.5 pl-1">Password</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">🔒</span>
+                                <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full h-12 pl-10 pr-4 py-2 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-dggYellow transition-all" />
+                            </div>
+                            <span class="block text-[9px] text-white/40 mt-2 pl-1 leading-normal">💡 Sandbox Access PIN Key: Enter password <b>512D</b> to login.</span>
+                        </div>
+                        
+                        <button type="submit" class="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 shadow-md transition-all mt-2 cursor-pointer select-none">
+                            Sign in
+                        </button>
+
+                        <p class="text-center text-xs text-white/60 pt-2 mt-1">
+                            Don't have an account? <button type="button" onclick="initializeWizardFlow()" class="text-dggYellow font-bold hover:underline bg-transparent border-0 cursor-pointer focus:outline-none">Sign up</button>
+                        </p>
+                    </div>
+
+                    <!-- MULTI-STEP SIGN UP WIZARD SLIDES -->
+                    <div id="wizardViewSegment" class="hidden">
+                        <!-- Slide 1: Name -->
+                        <div class="step-slide active text-left">
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Full Name *</label>
+                            <input id="regName" type="text" placeholder="Enter your full name" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none" />
+                        </div>
+                        <!-- Slide 2: Email -->
+                        <div class="step-slide text-left">
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Email Address *</label>
+                            <input id="regEmail" type="email" placeholder="Enter your corporate email" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none" />
+                        </div>
+                        <!-- Slide 3: Phone & Location -->
+                        <div class="step-slide text-left">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Phone Number</label>
+                                    <input id="regPhone" type="tel" placeholder="+234 567 890" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Location</label>
+                                    <input id="regLocation" type="text" placeholder="City, Country" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Slide 4: Track Role -->
+                        <div class="step-slide text-left">
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Select Your Workspace Role *</label>
+                            <select id="regRole" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none cursor-pointer text-white/80 bg-neutral-900">
+                                <option value="" disabled selected>Select your role...</option>
+                                <option>Full-Stack Developer Intern</option>
+                                <option>UI/UX Design Specialist</option>
+                                <option>Technical LMS Platform Instructor</option>
+                            </select>
+                        </div>
+                        <!-- Slide 5: Password Matrix -->
+                        <div class="step-slide text-left">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Password</label>
+                                    <input id="regPassword" type="password" placeholder="Min 6 characters" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase tracking-wider text-white/70 mb-2 pl-1">Repeat Password</label>
+                                    <input id="regRepeatPassword" type="password" placeholder="Repeat password" class="w-full h-12 px-4 inner-input-glass rounded-xl text-xs font-semibold focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between border-t border-white/10 pt-4 mt-5">
+                            <button type="button" id="prevStepBtn" onclick="navigateWizardStep(-1)" class="px-3 py-2 rounded-xl text-xs font-bold text-white/40 hover:text-white transition-colors focus:outline-none cursor-pointer bg-transparent border-0">
+                                ← Back
+                            </button>
+                            <button type="button" id="nextStepBtn" onclick="navigateWizardStep(1)" class="px-5 py-2.5 bg-dggYellow text-dggPurple font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 shadow-md transition-all cursor-pointer">
+                                Next Step →
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- 📑 4. ADVANCED STRATEGIC DUAL-COLUMN FOOTER HUBS -->
+    <footer class="absolute bottom-0 inset-x-0 z-20 p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-10 text-center w-full">
+        <!-- LEFT COLUMN: Pop-up modal triggers -->
+        <div class="flex flex-row items-center justify-center gap-6 text-[11px] sm:text-xs font-bold tracking-wide w-full md:w-auto order-1">
+            <button onclick="toggleStrategicModal('terms', true)" class="text-white/60 hover:text-white transition-colors bg-transparent border-0 cursor-pointer focus:outline-none">
+                Terms & Conditions <span class="text-[10px] text-dggYellow">→</span>
+            </button>
+            <button onclick="toggleStrategicModal('workflow', true)" class="text-white/60 hover:text-white transition-colors bg-transparent border-0 cursor-pointer focus:outline-none">
+                How It Works <span class="text-[10px] text-dggYellow">→</span>
+            </button>
+        </div>
+
+        <div class="text-[10px] sm:text-[11px] font-medium text-white/30 tracking-wide order-3 md:order-2 w-full md:w-auto mt-1 md:mt-0">
+            &copy; 2026 D-Global Growthfield. All Rights Reserved.
+        </div>
+
+        <div class="flex flex-row md:flex-col items-center justify-center md:items-end gap-x-6 gap-y-0.5 font-bold text-[11px] sm:text-xs w-full md:w-auto order-2 md:order-3">
+            <a href="https://dglobalgrowthfield.com/" target="_blank" rel="noopener noreferrer" class="text-dggYellow hover:underline inline-flex items-center gap-1 transition-colors">
+                Visit Website <span class="text-[9px] font-sans">→</span>
+            </a>
+            <a href="https://learning.dglobalgrowthfield.com/" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:underline inline-flex items-center gap-1 transition-colors">
+                Visit LMS <span class="text-[9px] font-sans">→</span>
+            </a>
+        </div>
+    </footer>
+
+    <!-- ========================================================================= -->
+    <!-- 🛡️ 100% RESPONSIVE CENTER-PINNED WINDOW SYSTEM (EXACT 20 OF 50 BOUNDS)   -->
+    <!-- ========================================================================= -->
+    <div id="strategicModalOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Back Blurry Screen Matrix Dim Layer -->
+        <div onclick="toggleStrategicModal('', false)" class="absolute inset-0 bg-dggDark/80 backdrop-blur-md cursor-pointer"></div>
+        
+        <!-- Pinned Center Window Base Component Framework (Stretches on mobile, exactly 40% adaptive on desktop) -->
+        <div class="modal-zoom-engine relative w-full md:w-[40%] bg-white text-slate-900 border border-neutral-200 rounded-[2.5rem] p-6 sm:p-8 shadow-[0_60px_120px_rgba(0,0,0,0.7)] flex flex-col h-[75vh] max-h-[600px] z-10 overflow-hidden">
+            
+            <!-- Sticky Fixed Window Top Header Segment -->
+            <div class="flex items-center justify-between border-b border-neutral-100 pb-3.5 flex-shrink-0">
+                <h3 id="modalTitleNode" class="text-xs sm:text-sm font-black uppercase tracking-wider text-dggPurple">System Handbook</h3>
+                <button type="button" onclick="toggleStrategicModal('', false)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-500 transition-colors flex items-center justify-center text-xs font-black focus:outline-none cursor-pointer border-0">✕</button>
+            </div>
+            
+            <!-- Completely Fluid Inner-Scroll Technical Document Container -->
+            <div id="modalBodyScrollContent" class="py-4 overflow-y-auto text-xs text-slate-600 leading-relaxed font-medium flex-grow pr-1 space-y-4">
+                <!-- Data loaded dynamically via script blocks -->
+            </div>
+            
+            <!-- Sticky Fixed Window Bottom Control Action Segment -->
+            <div class="pt-3.5 border-t border-neutral-100 flex items-center justify-end flex-shrink-0">
+                <button type="button" onclick="toggleStrategicModal('', false)" class="px-5 py-2.5 bg-dggPurple text-white font-black text-[10px] uppercase tracking-wider rounded-xl hover:opacity-95 shadow-md cursor-pointer border-0">Acknowledge & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔮 5. CORE ROUTING ENGINE SCRIPT INTEGRATIONS -->
+    <script>
+        const gatewaySubtitle = document.getElementById('gatewaySubtitle');
+        const loginViewSegment = document.getElementById('loginViewSegment');
+        const wizardViewSegment = document.getElementById('wizardViewSegment');
+        const cardContentEngine = document.getElementById('cardContentEngine');
+        const authSuccessView = document.getElementById('authSuccessView');
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        const activeProgressFill = document.getElementById('activeProgressFill');
+        
+        const slides = document.getElementsByClassName('step-slide');
+        const prevStepBtn = document.getElementById('prevStepBtn');
+        const nextStepBtn = document.getElementById('nextStepBtn');
+
+        const strategicModalOverlay = document.getElementById('strategicModalOverlay');
+        const modalTitleNode = document.getElementById('modalTitleNode');
+        const modalBodyScrollContent = document.getElementById('modalBodyScrollContent');
+
+        // Video Controller
+        const videoPlayer = document.getElementById('workspaceBgVideo');
+        
+        videoPlayer.addEventListener('loadedmetadata', () => {
+            videoPlayer.currentTime = 3; 
+        });
+
+        videoPlayer.addEventListener('seeked', () => {
+            videoPlayer.play();
+            videoPlayer.classList.remove('opacity-0'); 
+        });
+
+        videoPlayer.addEventListener('timeupdate', () => {
+            const freezePointBoundary = videoPlayer.duration - 2.0;
+            if (videoPlayer.currentTime >= freezePointBoundary) {
+                videoPlayer.pause();
+            }
+        });
+
+        // Clock Processor Loop
+        function processActiveClockLoop() {
+            const clockNode = document.getElementById('liveClockDisplay');
+            if(!clockNode) return;
+            const now = new Date();
+            let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            h = h < 10 ? '0' + h : h; m = m < 10 ? '0' + m : m; s = s < 10 ? '0' + s : s;
+            clockNode.innerHTML = `${h}:${m}:${s} WAT`;
+        }
+        setInterval(processActiveClockLoop, 1000);
+        processActiveClockLoop();
+
+        // High-Fidelity Modal Router Data Mapping
+        function toggleStrategicModal(type, isOpen) {
+            if (!isOpen) {
+                strategicModalOverlay.classList.add('hidden');
+                return;
+            }
+            if (type === 'terms') {
+                modalTitleNode.innerText = "Internal Code of Conduct (T&C)";
+                modalBodyScrollContent.innerHTML = `
+                    <div class="space-y-4 text-left">
+                        <div>
+                            <h4 class="font-bold text-dggPurple uppercase text-[10px] tracking-wider mb-1">1. Active Operational Shifts</h4>
+                            <p class="text-slate-600 pl-1">All staff members, remote personnel, and active interns must maintain full connectivity and system availability between <b>7:00 AM and 11:00 AM, Monday through Friday</b>. Mandatory team sync logs must be updated continuously during this block.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-dggPurple uppercase text-[10px] tracking-wider mb-1">2. Weekly Project Hard Deadlines</h4>
+                            <p class="text-slate-600 pl-1">All modular task updates, architectural commits, and performance briefs must be completed and pushed through the submission console before <b>12:30 PM every single Friday</b> without exception.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-dggPurple uppercase text-[10px] tracking-wider mb-1">3. Automated Content Engagement Velocity</h4>
+                            <p class="text-slate-600 pl-1">Personnel are strictly required to track official corporate handles across LinkedIn, Facebook, Instagram, and TikTok. You must actively like, repost, and provide constructive professional commentary on newly published brand media within 60 minutes of release to boost digital visibility indexes.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-dggPurple uppercase text-[10px] tracking-wider mb-1">4. Outreach Commissions & 20% ROI Payouts</h4>
+                            <p class="text-slate-600 pl-1">To cultivate complete ownership, every verified client acquisition or conversion brought in via outreach pathways triggers an instant, direct <b>20% Return on Investment (ROI) cash commission credit</b>. Consistently hitting targets unlocks senior workspace tiers and technical bonuses.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-dggPurple uppercase text-[10px] tracking-wider mb-1">5. Backend Structural Confidentiality</h4>
+                            <p class="text-slate-600 pl-1">You are strictly prohibited from publicly showcasing, broadcasting, or screenshotting workspace backend structures, database nodes, private dashboard views, or active server setups. Any breach of confidentiality protocols leads to immediate termination and security review.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-dggPurple uppercase text-[10px] tracking-wider mb-1">6. Absence Mitigation Framework</h4>
+                            <p class="text-slate-600 pl-1">If an un-avoidable schedule disruption or critical emergency causes you to miss a scheduled meeting or sprint, you must formally notify the system administration team within a strict <b>24 to 48-hour advance notice window</b>.</p>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'workflow') {
+                modalTitleNode.innerText = "Interactive Operational Guide";
+                modalBodyScrollContent.innerHTML = `
+                    <div class="space-y-4 text-left">
+                        <div class="border-l-2 border-dggYellow pl-3">
+                            <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Phase A: Workspace Sign-In & Onboarding</h4>
+                            <p class="text-slate-600 mt-0.5">Log in through your secure terminal port or use the progressive step-by-step onboarding layout wizard to select your specific technical workspace profile role.</p>
+                        </div>
+                        <div class="border-l-2 border-dggPurple pl-3">
+                            <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Phase B: The Direct Outreach & 20% ROI System</h4>
+                            <p class="text-slate-600 mt-0.5">Deploy assigned keyword structures and promotional media schedules. Track your traffic leads, and see your 20% performance incentives compile automatically as payments clear through Paystack.</p>
+                        </div>
+                        <div class="border-l-2 border-dggYellow pl-3">
+                            <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Phase C: Weekly Code & Task Submission</h4>
+                            <p class="text-slate-600 mt-0.5">Build out your project objectives and submit your modules via the tracking dashboard before the Friday 12:30 PM cutoff to clear your verification review ledger.</p>
+                        </div>
+                        <div class="border-l-2 border-dggPurple pl-3">
+                            <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Phase D: Brand Social Engagement Synchronization</h4>
+                            <p class="text-slate-600 mt-0.5">Maintain real-time alignment with standard engagement protocols across LinkedIn, Instagram, and TikTok channels to secure optimization pacing metrics.</p>
+                        </div>
+                        <div class="border-l-2 border-emerald-500 pl-3">
+                            <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Phase E: Continuous LMS Academic Pacing</h4>
+                            <p class="text-slate-600 mt-0.5">Bridge directly over into your localized portal at <b>learning.dglobalgrowthfield.com</b> to build your core developer roadmap skills and review academic milestones.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            // Scroll to the absolute top of the modal anytime it opens up anew
+            modalBodyScrollContent.scrollTop = 0;
+            strategicModalOverlay.classList.remove('hidden');
+        }
+
+        function initializeWizardFlow() {
+            isWizardModeActive = true;
+            currentActiveIndex = 0;
+            document.querySelector('h1').innerText = "Create Account";
+            gatewaySubtitle.innerText = "Request access to the DGG-Workspace";
+            loginViewSegment.classList.add('hidden');
+            wizardViewSegment.classList.remove('hidden');
+            progressBarContainer.classList.remove('hidden');
+            updateStepViewDisplayProperties();
+        }
+
+        function resetToLoginView() {
+            isWizardModeActive = false;
+            document.querySelector('h1').innerText = "Welcome to DGG-Workspace";
+            gatewaySubtitle.innerText = "Sign in to access your workspace";
+            wizardViewSegment.classList.add('hidden');
+            progressBarContainer.classList.add('hidden');
+            loginViewSegment.classList.remove('hidden');
+        }
+
+        function navigateWizardStep(direction) {
+            if (direction === 1 && !validateCurrentStepInputNode()) {
+                alert("Please complete the required field parameter before advancing your onboarding card slide.");
+                return;
+            }
+            currentActiveIndex += direction;
+            if (currentActiveIndex < 0) { resetToLoginView(); return; }
+            if (currentActiveIndex >= slides.length) { executeFinalAccountProvision(); return; }
+            updateStepViewDisplayProperties();
+        }
+
+        function updateStepViewDisplayProperties() {
+            for (let i = 0; i < slides.length; i++) { slides[i].classList.remove('active'); }
+            slides[currentActiveIndex].classList.add('active');
+            prevStepBtn.innerText = currentActiveIndex === 0 ? "← Cancel To Login" : "← Back";
+            if (currentActiveIndex === slides.length - 1) {
+                nextStepBtn.innerText = "Create Account ✓";
+                nextStepBtn.classList.replace('bg-dggYellow', 'bg-emerald-500');
+                nextStepBtn.classList.replace('text-dggPurple', 'text-white');
+            } else {
+                nextStepBtn.innerText = "Next Step →";
+                nextStepBtn.className = "px-5 py-2.5 bg-dggYellow text-dggPurple font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 shadow-md transition-all cursor-pointer";
+            }
+            const progressPercent = ((currentActiveIndex + 1) / slides.length) * 100;
+            activeProgressFill.style.width = progressPercent + "%";
+        }
+
+        function validateCurrentStepInputNode() {
+            if (currentActiveIndex === 0) return document.getElementById('regName').value.trim() !== "";
+            if (currentActiveIndex === 1) return document.getElementById('regEmail').value.trim() !== "";
+            if (currentActiveIndex === 2) return true;
+            if (currentActiveIndex === 3) return document.getElementById('regRole').value !== "";
+            if (currentActiveIndex === 4) {
+                const p1 = document.getElementById('regPassword').value;
+                const p2 = document.getElementById('regRepeatPassword').value;
+                return p1.length >= 6 && p1 === p2;
+            }
+            return true;
+        }
+
+        function handleFormSubmission(e) {
+            e.preventDefault();
+            if (isWizardModeActive) return;
+            const passValue = document.getElementById('loginPassword').value;
+            if (passValue === "512D" || passValue === "512d") {
+                triggerSuccessGatewayAnimation();
+            } else {
+                alert("ACCESS REJECTED: Invalid security clearance parameters.");
+            }
+        }
+
+        function executeFinalAccountProvision() { triggerSuccessGatewayAnimation(); }
+
+        function triggerSuccessGatewayAnimation() {
+            cardContentEngine.classList.add('hidden');
+            authSuccessView.classList.remove('hidden');
+            setTimeout(() => { window.location.href = "/dashboard"; }, 1800);
+        }
+    </script>
+</body>
+</html>

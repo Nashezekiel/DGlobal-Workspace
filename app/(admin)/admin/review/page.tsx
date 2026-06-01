@@ -56,11 +56,19 @@ export default function ReviewQueuePage() {
     open: false,
     submission: null,
   })
+  const [approveDialog, setApproveDialog] = useState<{ open: boolean; submission: SubmissionWithDetails | null }>({
+    open: false,
+    submission: null,
+  })
   const [viewDialog, setViewDialog] = useState<{ open: boolean; submission: SubmissionWithDetails | null }>({
     open: false,
     submission: null,
   })
   const [feedback, setFeedback] = useState('')
+  const [approvalNote, setApprovalNote] = useState('')
+
+  const approvalWordCount = approvalNote.trim().split(/\s+/).filter(Boolean).length
+  const isApprovalValid = approvalWordCount >= 5
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -75,10 +83,20 @@ export default function ReviewQueuePage() {
     fetchSubmissions()
   }, [])
 
-  const handleApprove = async (submission: SubmissionWithDetails) => {
+  const handleApprove = async () => {
+    if (!approveDialog.submission) return
+    const submission = approveDialog.submission
+    const note = approvalNote.trim()
+    const wordCount = note.split(/\s+/).filter(Boolean).length
+
+    if (wordCount < 5) {
+      alert('Approval note must be at least 5 words.')
+      return
+    }
+
     // Optimistic update
     setSubmissions(prev => prev.map(s =>
-      s.id === submission.id ? { ...s, status: 'approved' } : s
+      s.id === submission.id ? { ...s, status: 'approved', admin_feedback: note } : s
     ))
 
     const { error } = await supabase
@@ -86,32 +104,40 @@ export default function ReviewQueuePage() {
       .update({
         status: 'approved',
         reviewed_at: new Date().toISOString(),
-        feedback: null,
-        admin_feedback: null,
+        feedback: note,
+        admin_feedback: note,
       })
       .eq('id', submission.id)
 
     if (error) {
       // Revert
       setSubmissions(prev => prev.map(s =>
-        s.id === submission.id ? { ...s, status: 'pending_review' } : s
+        s.id === submission.id ? { ...s, status: 'pending_review', admin_feedback: undefined } : s
       ))
       alert('Failed to approve submission')
+      setApproveDialog({ open: false, submission: null })
+      setApprovalNote('')
       return
     }
 
     await Promise.all([
       supabase
         .from('tasks')
-        .update({ status: 'completed', admin_feedback: null, updated_at: new Date().toISOString() })
+        .update({
+          status: 'completed',
+          admin_feedback: note || null,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', submission.task_id),
       supabase
         .from('notifications')
         .insert({
           user_id: submission.worker_id,
           type: 'submission',
-          title: 'Submission Approved',
-          message: `Your submission for "${submission.tasks?.title || 'task'}" was approved.`,
+          title: 'Submission Approved ✅',
+          message: note
+            ? `Your submission for "${submission.tasks?.title || 'task'}" was approved. Note from admin: ${note}`
+            : `Your submission for "${submission.tasks?.title || 'task'}" was approved.`,
           link: '/my-tasks',
           is_read: false,
           metadata: {
@@ -120,6 +146,9 @@ export default function ReviewQueuePage() {
           },
         }),
     ])
+
+    setApproveDialog({ open: false, submission: null })
+    setApprovalNote('')
   }
 
   const handleReject = async () => {
@@ -297,13 +326,78 @@ export default function ReviewQueuePage() {
                   <TableCell>
                     {submission.status === 'pending_review' && (
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={() => handleApprove(submission)}
-                          size="sm"
-                          variant="outline"
+                        <Dialog
+                          open={approveDialog.open && approveDialog.submission?.id === submission.id}
+                          onOpenChange={(open) => {
+                            setApproveDialog({ open, submission: open ? submission : null })
+                            if (!open) setApprovalNote('')
+                          }}
                         >
-                          Approve
-                        </Button>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-700 border-green-300 hover:bg-green-50"
+                              onClick={() => setApproveDialog({ open: true, submission })}
+                            >
+                              Approve
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2 text-green-700">
+                                ✅ Approve Submission
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-3">
+                              <p className="text-sm text-gray-600">
+                                Approving <span className="font-semibold text-gray-800">{submission.tasks?.title}</span> by <span className="font-semibold text-gray-800">{submission.profiles?.full_name}</span>.
+                              </p>
+                              <div>
+                                <div className="flex justify-between items-center mb-1.5">
+                                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                    Acceptance Note <span className="text-red-500">*</span>
+                                  </label>
+                                  <span className={`text-xs font-semibold ${isApprovalValid ? 'text-green-600' : 'text-amber-500 animate-pulse'}`}>
+                                    {approvalWordCount} / 5 words
+                                  </span>
+                                </div>
+                                <Textarea
+                                  placeholder="Provide an acceptance note or feedback for the intern (min 5 words)..."
+                                  value={approvalNote}
+                                  onChange={(e) => setApprovalNote(e.target.value)}
+                                  className={`resize-none focus-visible:ring-1 ${!isApprovalValid && approvalNote.trim().length > 0 ? 'border-amber-300 focus-visible:ring-amber-500' : ''}`}
+                                  rows={3}
+                                />
+                                {approvalNote.trim().length > 0 && !isApprovalValid && (
+                                  <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                    Please write at least {5 - approvalWordCount} more word{5 - approvalWordCount === 1 ? '' : 's'}.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <DialogFooter className="gap-2">
+                              <Button
+                                onClick={() => { setApproveDialog({ open: false, submission: null }); setApprovalNote('') }}
+                                variant="outline"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleApprove}
+                                disabled={!isApprovalValid}
+                                className={`text-white transition-all ${
+                                  isApprovalValid
+                                    ? 'bg-green-600 hover:bg-green-700 active:scale-95'
+                                    : 'bg-green-600/50 cursor-not-allowed hover:bg-green-600/50 opacity-70'
+                                }`}
+                              >
+                                Confirm Approval
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                         <Dialog
                           open={rejectDialog.open && rejectDialog.submission?.id === submission.id}
                           onOpenChange={(open) => setRejectDialog({ open, submission: open ? submission : null })}

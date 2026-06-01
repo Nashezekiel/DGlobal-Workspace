@@ -121,11 +121,25 @@ export const TaskCard = memo(function TaskCard({
               </div>
             )}
 
-            {/* Admin Feedback */}
+            {/* Admin Feedback — Rejection (red) or Acceptance (green) */}
             {task.admin_feedback && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-red-600">Admin Feedback</p>
-                <p className="mt-0.5 text-sm text-red-800">{task.admin_feedback}</p>
+              <div className={`rounded-md border px-3 py-2 ${
+                task.status === 'completed' || task.status === 'achieved'
+                  ? 'border-green-200 bg-green-50'
+                  : 'border-red-200 bg-red-50'
+              }`}>
+                <p className={`text-[10px] font-bold uppercase tracking-wide ${
+                  task.status === 'completed' || task.status === 'achieved'
+                    ? 'text-green-700'
+                    : 'text-red-600'
+                }`}>
+                  {task.status === 'completed' || task.status === 'achieved' ? '✅ Admin Note' : 'Admin Feedback'}
+                </p>
+                <p className={`mt-0.5 text-sm ${
+                  task.status === 'completed' || task.status === 'achieved'
+                    ? 'text-green-800'
+                    : 'text-red-800'
+                }`}>{task.admin_feedback}</p>
               </div>
             )}
 
@@ -229,11 +243,25 @@ export const TaskCard = memo(function TaskCard({
           )}
         </div>
 
-        {/* Admin Feedback (Rejected) */}
-        {task.status === 'rejected' && task.admin_feedback && (
-          <div className="mx-3 mb-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-red-600">Admin Feedback</p>
-            <p className="mt-0.5 text-xs text-red-800">{task.admin_feedback}</p>
+        {/* Admin Feedback — shown on card inline */}
+        {task.admin_feedback && (
+          <div className={`mx-3 mb-2 rounded-md border px-3 py-2 ${
+            task.status === 'completed' || task.status === 'achieved'
+              ? 'border-green-200 bg-green-50'
+              : 'border-red-200 bg-red-50'
+          }`}>
+            <p className={`text-[10px] font-bold uppercase tracking-wide ${
+              task.status === 'completed' || task.status === 'achieved'
+                ? 'text-green-700'
+                : 'text-red-600'
+            }`}>
+              {task.status === 'completed' || task.status === 'achieved' ? '✅ Admin Note' : 'Admin Feedback'}
+            </p>
+            <p className={`mt-0.5 text-xs ${
+              task.status === 'completed' || task.status === 'achieved'
+                ? 'text-green-800'
+                : 'text-red-800'
+            }`}>{task.admin_feedback}</p>
           </div>
         )}
 

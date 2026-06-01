@@ -184,7 +184,7 @@ export default function AdminTaskReviewPage() {
       const task = tasks.find(t => t.id === taskId)
       if (!task) return
 
-      let feedback = null
+      let feedback = ''
 
       if (status === 'rejected') {
         let reason = ''
@@ -199,12 +199,33 @@ export default function AdminTaskReviewPage() {
           }
         }
         feedback = reason
+      } else if (status === 'completed') {
+        let note = ''
+        while (true) {
+          const promptVal = window.prompt(
+            'Please provide an acceptance note / approval feedback (required, at least 5 words):'
+          )
+          if (promptVal === null) return // Admin cancelled
+          const trimmed = promptVal.trim()
+          const wordCount = trimmed.split(/\s+/).filter(Boolean).length
+          if (wordCount < 5) {
+            alert(`Approval note must be at least 5 words long. (Current count: ${wordCount} words)`)
+          } else {
+            note = trimmed
+            break
+          }
+        }
+        feedback = note
       }
 
-      // 1. Update the task status
+      // 1. Update the task status and feedback
       const { error: taskError } = await supabase
         .from('tasks')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ 
+          status, 
+          admin_feedback: feedback || null,
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', taskId)
 
       if (taskError) {
@@ -213,8 +234,8 @@ export default function AdminTaskReviewPage() {
         return
       }
 
-      // 2. If rejected, stamp the most recent submission
-      if (status === 'rejected') {
+      // 2. Stamp the most recent submission with the status and feedback
+      if (status === 'completed' || status === 'rejected') {
         const { data: latestSubmission } = await supabase
           .from('submissions')
           .select('id')
@@ -227,8 +248,9 @@ export default function AdminTaskReviewPage() {
           await supabase
             .from('submissions')
             .update({
-              status: 'rejected',
-              admin_feedback: feedback,
+              status: status === 'completed' ? 'approved' : 'rejected',
+              feedback: feedback || null,
+              admin_feedback: feedback || null,
               reviewed_at: new Date().toISOString(),
             })
             .eq('id', latestSubmission.id)
@@ -240,10 +262,10 @@ export default function AdminTaskReviewPage() {
         await supabase.from('notifications').insert({
           user_id: task.assigned_to,
           type: 'task',
-          title: status === 'completed' ? 'Task Approved' : 'Task Rejected',
+          title: status === 'completed' ? 'Submission Approved ✅' : 'Submission Rejected',
           message:
             status === 'completed'
-              ? `Your work on "${task.title}" was approved.`
+              ? `Your work on "${task.title}" was approved. Note from admin: ${feedback}`
               : `Your work on "${task.title}" was rejected. Feedback: ${feedback}`,
           link: '/my-tasks',
           is_read: false,
