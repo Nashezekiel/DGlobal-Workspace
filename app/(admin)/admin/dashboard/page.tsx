@@ -105,7 +105,7 @@ export default async function AdminDashboardPage() {
         <PageHeader title="Admin Dashboard" subtitle="Global overview of team performance." />
 
         {/* KPI row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatusCard
             icon={Users}
             label="Team Outreach"
@@ -145,8 +145,8 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Quick actions + activity */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Card className="xl:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Quick actions</span>
@@ -196,7 +196,7 @@ export default async function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="xl:col-span-2">
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Pending review (latest 5)</span>
@@ -211,16 +211,16 @@ export default async function AdminDashboardPage() {
               ) : (
                 <div className="divide-y rounded-lg border bg-white">
                   {recentPendingSubmissions.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between p-4">
+                    <div key={s.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4">
                       <div className="min-w-0">
                         <div className="font-medium text-gray-900 truncate">
                           {s.tasks?.title || 'Task'}
                         </div>
                         <div className="text-sm text-gray-500 truncate">
-                          {s.profiles?.full_name || 'Intern'} • {new Date(s.submitted_at).toLocaleString()}
+                          {s.profiles?.full_name || 'Intern'} &bull; {new Date(s.submitted_at).toLocaleString()}
                         </div>
                       </div>
-                      <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Pending</Badge>
+                      <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 self-start sm:self-auto shrink-0">Pending</Badge>
                     </div>
                   ))}
                 </div>
@@ -256,64 +256,99 @@ export default async function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">No tasks found. Create your first task to get started.</div>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead>
-                    <tr className="border-b text-gray-500 font-medium">
-                      <th className="pb-3 pl-2">Task</th>
-                      <th className="pb-3">Assignee</th>
-                      <th className="pb-3">Status</th>
-                      <th className="pb-3">Priority</th>
-                      <th className="pb-3">Due Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {recentTasks.map((t) => (
-                      <tr key={t.id} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="py-4 pl-2">
-                          <div className="font-medium text-gray-900 group-hover:text-brand-purple transition-colors">{t.title}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">ID: {t.id.slice(0, 8)}</div>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center text-[10px] font-bold">
-                              {(getProfile(t.profiles)?.full_name || 'U').slice(0, 2).toUpperCase()}
-                            </div>
-                            <span className="text-gray-700">{getProfile(t.profiles)?.full_name || 'Unassigned'}</span>
+              <>
+                {/* Mobile card view */}
+                <div className="md:hidden space-y-3">
+                  {recentTasks.map((t) => (
+                    <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <a href={`/admin/tasks/${t.id}`} className="font-semibold text-gray-900 hover:text-brand-purple transition-colors line-clamp-2 block">{t.title}</a>
+                          <div className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">ID: {t.id.slice(0, 8)}</div>
+                        </div>
+                        <Badge variant="secondary" className={`capitalize shrink-0 text-xs ${
+                          t.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100'
+                          : t.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        }`}>{t.priority}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center text-[10px] font-bold">
+                            {(getProfile(t.profiles)?.full_name || 'U').slice(0, 2).toUpperCase()}
                           </div>
-                        </td>
-                        <td className="py-4">
-                          <Badge variant="outline" className={`capitalize ${
-                            t.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' :
-                            t.status === 'in_progress' ? 'border-blue-200 bg-blue-50 text-blue-700' :
-                            t.status === 'under_review' ? 'border-amber-200 bg-amber-50 text-amber-700' :
-                            'border-gray-200 bg-gray-50 text-gray-600'
-                          }`}>
-                            {t.status.replace('_', ' ')}
-                          </Badge>
-                        </td>
-                        <td className="py-4">
-                          <Badge
-                            variant="secondary"
-                            className={
-                              t.priority === 'high'
-                                ? 'bg-red-50 text-red-700 border-red-100'
-                                : t.priority === 'medium'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-100'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                            }
-                          >
-                            {t.priority}
-                          </Badge>
-                        </td>
-                        <td className="py-4 text-gray-500">
-                          {t.due_date ? new Date(t.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No date'}
-                        </td>
+                          <span className="text-xs text-gray-600 truncate max-w-[120px]">{getProfile(t.profiles)?.full_name || 'Unassigned'}</span>
+                        </div>
+                        <Badge variant="outline" className={`capitalize text-xs ${
+                          t.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700'
+                          : t.status === 'in_progress' ? 'border-blue-200 bg-blue-50 text-blue-700'
+                          : t.status === 'under_review' ? 'border-amber-200 bg-amber-50 text-amber-700'
+                          : 'border-gray-200 bg-gray-50 text-gray-600'
+                        }`}>{t.status.replace('_', ' ')}</Badge>
+                      </div>
+                      {t.due_date && (
+                        <div className="text-xs text-gray-400">
+                          Due: {new Date(t.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table view */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="border-b text-gray-500 font-medium">
+                        <th className="pb-3 pl-2">Task</th>
+                        <th className="pb-3">Assignee</th>
+                        <th className="pb-3">Status</th>
+                        <th className="pb-3">Priority</th>
+                        <th className="pb-3">Due Date</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y">
+                      {recentTasks.map((t) => (
+                        <tr key={t.id} className="hover:bg-gray-50/50 transition-colors group">
+                          <td className="py-4 pl-2">
+                            <div className="font-medium text-gray-900 group-hover:text-brand-purple transition-colors">{t.title}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">ID: {t.id.slice(0, 8)}</div>
+                          </td>
+                          <td className="py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center text-[10px] font-bold">
+                                {(getProfile(t.profiles)?.full_name || 'U').slice(0, 2).toUpperCase()}
+                              </div>
+                              <span className="text-gray-700">{getProfile(t.profiles)?.full_name || 'Unassigned'}</span>
+                            </div>
+                          </td>
+                          <td className="py-4">
+                            <Badge variant="outline" className={`capitalize ${
+                              t.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700'
+                              : t.status === 'in_progress' ? 'border-blue-200 bg-blue-50 text-blue-700'
+                              : t.status === 'under_review' ? 'border-amber-200 bg-amber-50 text-amber-700'
+                              : 'border-gray-200 bg-gray-50 text-gray-600'
+                            }`}>
+                              {t.status.replace('_', ' ')}
+                            </Badge>
+                          </td>
+                          <td className="py-4">
+                            <Badge variant="secondary" className={
+                              t.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100'
+                              : t.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            }>
+                              {t.priority}
+                            </Badge>
+                          </td>
+                          <td className="py-4 text-gray-500">
+                            {t.due_date ? new Date(t.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No date'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

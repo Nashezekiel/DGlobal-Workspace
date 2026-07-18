@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -51,8 +51,11 @@ import {
   CalendarClock,
   Flag,
   Users,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react'
 import Image from 'next/image'
+import { deleteWorker } from './actions'
 
 interface WorkerStats extends Profile {
   tasksAssigned: number
@@ -146,6 +149,14 @@ export default function TeamManagementPage() {
     open: false,
     worker: null,
   })
+
+  // Delete dialog state
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; worker: WorkerStats | null }>({
+    open: false,
+    worker: null,
+  })
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isPendingDelete, startDeleteTransition] = useTransition()
 
   const taskForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -279,6 +290,26 @@ export default function TeamManagementPage() {
     return Math.round((worker.tasksCompleted / worker.tasksAssigned) * 100)
   }
 
+  const handleDeleteWorker = (worker: WorkerStats) => {
+    setDeleteError(null)
+    setDeleteDialog({ open: true, worker })
+  }
+
+  const confirmDelete = () => {
+    if (!deleteDialog.worker) return
+    const workerToDelete = deleteDialog.worker
+    startDeleteTransition(async () => {
+      const result = await deleteWorker(workerToDelete.id)
+      if (result.success) {
+        setWorkers(prev => prev.filter(w => w.id !== workerToDelete.id))
+        setDeleteDialog({ open: false, worker: null })
+        setProfileDialog({ open: false, worker: null })
+      } else {
+        setDeleteError(result.error || 'Failed to delete user.')
+      }
+    })
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Team Management" subtitle="View your team and assign tasks directly from here." />
@@ -404,6 +435,18 @@ export default function TeamManagementPage() {
                             <MessageSquare className="h-3.5 w-3.5" />
                             Message
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteWorker(worker)
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -513,27 +556,40 @@ export default function TeamManagementPage() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="px-6 pb-6 flex gap-3">
-                  <Button
-                    className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white gap-2"
-                    onClick={() => {
-                      setProfileDialog({ open: false, worker: null })
-                      openAssignPanel(w)
-                    }}
-                  >
-                    <ClipboardPlus className="h-4 w-4" />
-                    Assign Task
-                  </Button>
+                <div className="px-6 pb-6 flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <Button
+                      className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white gap-2"
+                      onClick={() => {
+                        setProfileDialog({ open: false, worker: null })
+                        openAssignPanel(w)
+                      }}
+                    >
+                      <ClipboardPlus className="h-4 w-4" />
+                      Assign Task
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      onClick={() => {
+                        setProfileDialog({ open: false, worker: null })
+                        setMessageDialog({ open: true, worker: w })
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Message
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
-                    className="flex-1 gap-2"
+                    className="w-full gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                     onClick={() => {
                       setProfileDialog({ open: false, worker: null })
-                      setMessageDialog({ open: true, worker: w })
+                      handleDeleteWorker(w)
                     }}
                   >
-                    <MessageSquare className="h-4 w-4" />
-                    Message
+                    <Trash2 className="h-4 w-4" />
+                    Delete Worker Account
                   </Button>
                 </div>
               </div>
@@ -730,6 +786,58 @@ export default function TeamManagementPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Delete Confirmation Dialog ─── */}
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) { setDeleteDialog({ open: false, worker: null }); setDeleteError(null) }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Worker Account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-gray-700">
+              Are you sure you want to permanently delete{' '}
+              <span className="font-semibold">{deleteDialog.worker?.full_name}</span>?
+            </p>
+            <p className="text-sm text-gray-500">
+              This will remove their account, profile, and all associated data. This action{' '}
+              <span className="font-semibold text-red-600">cannot be undone</span>.
+            </p>
+            {deleteError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {deleteError}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setDeleteDialog({ open: false, worker: null }); setDeleteError(null) }}
+              disabled={isPendingDelete}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              disabled={isPendingDelete}
+              className="bg-red-600 hover:bg-red-700 text-white gap-2"
+            >
+              {isPendingDelete ? (
+                <><Loader2 className="h-4 w-4 animate-spin" />Deleting…</>
+              ) : (
+                <><Trash2 className="h-4 w-4" />Yes, Delete Account</>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

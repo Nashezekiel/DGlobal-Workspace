@@ -37,20 +37,26 @@ export const StatusCard = memo(function StatusCard({ icon: Icon, label, count, c
           </div>
         </div>
         {trend && (
-          <div className={`flex items-center text-sm font-medium ${
-            trend.isPositive ? 'text-green-600' : 'text-red-600'
-          }`}>
-            <span className="mr-1">
-              {trend.isPositive ? '+' : '-'}{trend.value}%
-            </span>
-            <svg 
-              className={`w-4 h-4 ${trend.isPositive ? 'rotate-0' : 'rotate-180'}`} 
-              fill="currentColor" 
-              viewBox="0 0 20 20"
-            >
-              <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-          </div>
+          trend.value === 0 ? (
+            <div className="flex items-center text-xs font-medium text-gray-400">
+              <span>No change</span>
+            </div>
+          ) : (
+            <div className={`flex items-center text-sm font-medium ${
+              trend.isPositive ? 'text-green-600' : 'text-red-600'
+            }`}>
+              <span className="mr-1">
+                {trend.isPositive ? '+' : '-'}{trend.value}
+              </span>
+              <svg
+                className={`w-4 h-4 ${trend.isPositive ? 'rotate-0' : 'rotate-180'}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )
         )}
       </div>
     </div>

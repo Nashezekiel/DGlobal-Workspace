@@ -40,15 +40,65 @@ export default async function DashboardPage() {
     const allTasks: Task[] = (tasksResult.data || []) as Task[]
     const allSubmissions: Submission[] = (submissionsResult.data || []) as Submission[]
 
-    // Calculate metrics from fetched data (more efficient)
+    // ── Week boundaries (Monday-based) ──────────────────────────────────────
+    const now = new Date()
+    const dow = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon … 7=Sun
+    const startOfThisWeek = new Date(now)
+    startOfThisWeek.setDate(now.getDate() - (dow - 1))
+    startOfThisWeek.setHours(0, 0, 0, 0)
+    const startOfLastWeek = new Date(startOfThisWeek)
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7)
+
+    const inThisWeek = (dateStr: string) => new Date(dateStr) >= startOfThisWeek
+    const inLastWeek = (dateStr: string) => {
+      const d = new Date(dateStr)
+      return d >= startOfLastWeek && d < startOfThisWeek
+    }
+
+    // Helper: returns { value, isPositive } for the trend chip
+    const trend = (current: number, previous: number) => ({
+      value: Math.abs(current - previous),
+      isPositive: current >= previous,
+    })
+
+    // ── Current metrics ───────────────────────────────────────────────────────
     const assigned = allTasks.length
     const completed = allTasks.filter(task => task.status === 'completed').length
     const pendingReview = allSubmissions.filter(sub => sub.status === 'pending_review').length
-    const overdue = allTasks.filter(task => 
-      task.due_date && 
-      new Date(task.due_date) < new Date() && 
+    const overdue = allTasks.filter(task =>
+      task.due_date &&
+      new Date(task.due_date) < new Date() &&
       task.status !== 'completed'
     ).length
+
+    // ── This-week vs last-week counts ────────────────────────────────────────
+    // Assigned: tasks created this/last week
+    const assignedThisWeek = allTasks.filter(t => inThisWeek(t.created_at)).length
+    const assignedLastWeek = allTasks.filter(t => inLastWeek(t.created_at)).length
+
+    // Completed: tasks with completed status, bucketed by creation date as proxy
+    const completedThisWeek = allTasks.filter(t => t.status === 'completed' && inThisWeek(t.created_at)).length
+    const completedLastWeek = allTasks.filter(t => t.status === 'completed' && inLastWeek(t.created_at)).length
+
+    // Pending review: submissions submitted this/last week
+    const pendingThisWeek = allSubmissions.filter(s => s.status === 'pending_review' && inThisWeek(s.submitted_at)).length
+    const pendingLastWeek = allSubmissions.filter(s => s.status === 'pending_review' && inLastWeek(s.submitted_at)).length
+
+    // Overdue: tasks that became overdue (due_date fell) this/last week
+    const overdueThisWeek = allTasks.filter(t =>
+      t.due_date && inThisWeek(t.due_date) &&
+      new Date(t.due_date) < now && t.status !== 'completed'
+    ).length
+    const overdueLastWeek = allTasks.filter(t =>
+      t.due_date && inLastWeek(t.due_date) &&
+      new Date(t.due_date) < now && t.status !== 'completed'
+    ).length
+
+    const assignedTrend = trend(assignedThisWeek, assignedLastWeek)
+    const completedTrend = trend(completedThisWeek, completedLastWeek)
+    const pendingTrend = trend(pendingThisWeek, pendingLastWeek)
+    const overdueTrend = trend(overdueThisWeek, overdueLastWeek)
+
     const recentTasks = allTasks
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5)
@@ -61,34 +111,34 @@ export default async function DashboardPage() {
         />
 
         {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatusCard
             icon={ClipboardList}
             label="Assigned Tasks"
             count={assigned}
             color="text-blue-600"
-            trend={{ value: 12, isPositive: true }}
+            trend={assignedTrend}
           />
           <StatusCard
             icon={CheckCircle}
             label="Completed"
             count={completed}
             color="text-green-600"
-            trend={{ value: 8, isPositive: true }}
+            trend={completedTrend}
           />
           <StatusCard
             icon={Clock}
             label="Pending Review"
             count={pendingReview}
             color="text-yellow-600"
-            trend={{ value: 3, isPositive: false }}
+            trend={pendingTrend}
           />
           <StatusCard
             icon={AlertCircle}
             label="Overdue"
             count={overdue}
             color="text-red-600"
-            trend={{ value: 2, isPositive: false }}
+            trend={overdueTrend}
           />
         </div>
 
