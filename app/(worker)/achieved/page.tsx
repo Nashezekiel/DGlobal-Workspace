@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import { Task } from '@/types'
 import { PageHeader } from '@/components/PageHeader'
@@ -69,7 +70,7 @@ export default function WorkerArchivedPage() {
         .from('tasks')
         .select('*')
         .in('status', ['achieved', 'completed'])
-        .or(`assigned_to.eq.${user.id},and(assigned_role.eq.worker,assigned_to.is.null)`)
+        .eq('assigned_to', user.id)
         .order('updated_at', { ascending: false })
 
       const taskIds = (tasksData || []).map((t: Task) => t.id)
@@ -306,8 +307,14 @@ export default function WorkerArchivedPage() {
                       {proof.image && (
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Proof Image</p>
-                          <img src={proof.image} alt="Submission proof"
-                            className="rounded-md border max-h-56 object-contain w-full" />
+                          <Image
+                            src={proof.image}
+                            alt="Submission proof"
+                            width={1200}
+                            height={900}
+                            unoptimized
+                            className="rounded-md border max-h-56 object-contain w-full"
+                          />
                         </div>
                       )}
                     </div>

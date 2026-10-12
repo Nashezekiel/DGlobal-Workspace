@@ -121,6 +121,8 @@ export default function TaskCreationPage() {
     let tasksToInsert: Record<string, string>[] = []
 
     if (values.assign_type === 'all') {
+      // Snapshot the current worker list at creation time so future users do not inherit
+      // tasks that were meant only for the workers active when the task was assigned.
       recipients = workers.map((worker) => worker.id)
       tasksToInsert = recipients.map(workerId => ({
         ...baseTaskData,

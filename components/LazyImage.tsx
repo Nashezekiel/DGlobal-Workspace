@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import { memo } from 'react'
 
 interface LazyImageProps {
@@ -42,10 +43,12 @@ export const LazyImage = memo(function LazyImage({
         <div className={`absolute inset-0 ${placeholder} animate-pulse rounded`} />
       )}
       {isInView && (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={1200}
+          height={900}
+          unoptimized
           className={`${className} transition-opacity duration-300 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}

@@ -120,7 +120,7 @@ export default function MyTasksPage() {
       const { data: tasksData } = await supabase
         .from('tasks')
         .select('*')
-        .or(`assigned_to.eq.${user.id},and(assigned_role.eq.worker,assigned_to.is.null)`)
+        .eq('assigned_to', user.id)
         .order('created_at', { ascending: false })
 
       const { data: submissionsData } = await supabase

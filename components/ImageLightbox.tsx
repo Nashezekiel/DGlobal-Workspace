@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createPortal } from 'react-dom'
 import { X, ZoomIn } from 'lucide-react'
 
@@ -63,10 +64,12 @@ export function ImageLightbox({ src, alt = 'Image', className }: ImageLightboxPr
               </button>
 
               {/* Full-size image */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={src}
                 alt={alt}
+                width={1200}
+                height={900}
+                unoptimized
                 className="max-h-[85vh] w-auto max-w-full rounded-xl shadow-2xl object-contain"
               />
 
@@ -92,10 +95,12 @@ export function ImageLightbox({ src, alt = 'Image', className }: ImageLightboxPr
         }}
         className={`relative cursor-zoom-in group ${className ?? ''}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={1200}
+          height={900}
+          unoptimized
           className="w-full max-h-64 object-contain bg-gray-50"
         />
         {/* Hover zoom hint */}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import { Task } from '@/types'
 import { PageHeader } from '@/components/PageHeader'
@@ -384,9 +385,12 @@ export default function AdminArchivedPage() {
                       {proof.image && (
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Proof Image</p>
-                          <img
+                          <Image
                             src={proof.image}
                             alt="Submission proof"
+                            width={1200}
+                            height={900}
+                            unoptimized
                             className="rounded-md border max-h-64 object-contain w-full"
                           />
                         </div>

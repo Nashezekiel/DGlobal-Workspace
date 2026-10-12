@@ -182,13 +182,6 @@ export default function TeamManagementPage() {
     const profiles: Profile[] = (profilesResult.data || []) as Profile[]
     const tasks: TaskSummary[] = (tasksResult.data || []) as TaskSummary[]
 
-    const globalAssignedCount = tasks.filter(
-      (task) => task.assigned_role === 'worker' && !task.assigned_to,
-    ).length
-    const globalCompletedCount = tasks.filter(
-      (task) => task.assigned_role === 'worker' && !task.assigned_to && task.status === 'completed',
-    ).length
-
     const workersWithStats: WorkerStats[] = profiles.map((profile) => {
       const assignedSpecific = tasks.filter((task) => task.assigned_to === profile.id).length
       const completedSpecific = tasks.filter(
@@ -196,8 +189,8 @@ export default function TeamManagementPage() {
       ).length
       return {
         ...profile,
-        tasksAssigned: assignedSpecific + globalAssignedCount,
-        tasksCompleted: completedSpecific + globalCompletedCount,
+        tasksAssigned: assignedSpecific,
+        tasksCompleted: completedSpecific,
       }
     })
 

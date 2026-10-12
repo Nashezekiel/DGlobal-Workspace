@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { User, LogOut, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -51,7 +52,14 @@ export function ProfileDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 hover:bg-brand-purple/10 hover:text-brand-purple">
           {user.avatar_url ? (
-            <img src={user.avatar_url} alt="Profile" className="h-6 w-6 rounded-full object-cover border border-brand-purple/20" />
+            <Image
+              src={user.avatar_url}
+              alt="Profile"
+              width={24}
+              height={24}
+              unoptimized
+              className="h-6 w-6 rounded-full object-cover border border-brand-purple/20"
+            />
           ) : (
             <User className="h-4 w-4 text-brand-purple" />
           )}

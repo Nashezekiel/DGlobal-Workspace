@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import { Submission } from '@/types'
 import { PageHeader } from '@/components/PageHeader'
@@ -479,8 +480,14 @@ export default function ReviewQueuePage() {
                 {proof.image && (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Proof Image</p>
-                    <img src={proof.image} alt="Submission proof"
-                      className="rounded-md border max-h-72 object-contain w-full" />
+                    <Image
+                      src={proof.image}
+                      alt="Submission proof"
+                      width={1200}
+                      height={900}
+                      unoptimized
+                      className="rounded-md border max-h-72 object-contain w-full"
+                    />
                   </div>
                 )}
                 {!proof.note && !proof.link && !proof.image && (

@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import React from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -34,7 +33,7 @@ import { ImageLightbox } from '@/components/ImageLightbox'
 
 // ─── Collapsible evidence block (used inside the Submissions card) ────────────
 function SubmissionEvidenceToggle({ content: raw }: { content: string }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = useState(false)
 
   let parsed: { note?: string; link?: string; image?: string } = {}
   try {
@@ -156,11 +155,7 @@ export default function TaskDetailPage() {
     },
   })
 
-  useEffect(() => {
-    fetchTaskAndWorkers()
-  }, [taskId])
-
-  const fetchTaskAndWorkers = async () => {
+  const fetchTaskAndWorkers = useCallback(async () => {
     setIsLoading(true)
     
     // Fetch task details with submissions
@@ -206,8 +201,11 @@ export default function TaskDetailPage() {
     }
     
     setIsLoading(false)
-  }
+  }, [form, taskId])
 
+  useEffect(() => {
+    fetchTaskAndWorkers()
+  }, [fetchTaskAndWorkers])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)

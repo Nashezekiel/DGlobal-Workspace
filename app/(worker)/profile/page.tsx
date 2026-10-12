@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -187,7 +188,7 @@ export default function ProfilePage() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {avatarFile ? (
-                      <img src={avatarFile} alt="Profile" className="w-full h-full object-cover" />
+                      <Image src={avatarFile} alt="Profile" fill unoptimized className="object-cover" />
                     ) : (
                       form.watch('full_name')?.charAt(0).toUpperCase() || 'U'
                     )}
