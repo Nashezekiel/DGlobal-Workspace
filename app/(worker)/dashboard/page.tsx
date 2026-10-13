@@ -1,16 +1,18 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 import { ClipboardList, CheckCircle, Clock, AlertCircle, TrendingUp, Calendar } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Submission, Task } from '@/types'
 
 // Dynamic imports to defer loading of heavy components
-const StatusCard = dynamic(() => import('@/components/StatusCard').then(mod => ({ default: mod.StatusCard })), {
+const StatusCard = nextDynamic(() => import('@/components/StatusCard').then(mod => ({ default: mod.StatusCard })), {
   loading: () => <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
 })
-const PageHeader = dynamic(() => import('@/components/PageHeader').then(mod => ({ default: mod.PageHeader })))
-const TaskCard = dynamic(() => import('@/components/TaskCard').then(mod => ({ default: mod.TaskCard })), {
+const PageHeader = nextDynamic(() => import('@/components/PageHeader').then(mod => ({ default: mod.PageHeader })))
+const TaskCard = nextDynamic(() => import('@/components/TaskCard').then(mod => ({ default: mod.TaskCard })), {
   loading: () => <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
 })
 
@@ -30,7 +32,7 @@ export default async function DashboardPage() {
       supabase
         .from('tasks')
         .select('*')
-        .or(`assigned_to.eq.${userId},and(assigned_role.eq.worker,assigned_to.is.null)`),
+        .eq('assigned_to', userId),
       supabase
         .from('submissions')
         .select('*')

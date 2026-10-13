@@ -1,7 +1,9 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 import { Users, CheckCircle, Clock, UserCheck, ArrowRight, Plus, ClipboardList, ShieldAlert } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,10 +11,10 @@ import { Button } from '@/components/ui/button'
 import { TaskWithProfile } from '@/types'
 
 // Dynamic imports to defer loading of heavy components
-const StatusCard = dynamic(() => import('@/components/StatusCard').then(mod => ({ default: mod.StatusCard })), {
+const StatusCard = nextDynamic(() => import('@/components/StatusCard').then(mod => ({ default: mod.StatusCard })), {
   loading: () => <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
 })
-const PageHeader = dynamic(() => import('@/components/PageHeader').then(mod => ({ default: mod.PageHeader })))
+const PageHeader = nextDynamic(() => import('@/components/PageHeader').then(mod => ({ default: mod.PageHeader })))
 
 export default async function AdminDashboardPage() {
   try {

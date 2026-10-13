@@ -21,7 +21,7 @@ export default function ReportsPage() {
         supabase
           .from('tasks')
           .select('*')
-          .or(`assigned_to.eq.${user.id},and(assigned_role.eq.worker,assigned_to.is.null)`),
+          .eq('assigned_to', user.id),
         supabase
           .from('submissions')
           .select('*')
